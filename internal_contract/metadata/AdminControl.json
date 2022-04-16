@@ -42,7 +42,7 @@
                 {
                     "internalType": "address",
                     "name": "newAdmin",
-                    "type": "address"
+                    "type": "0xAF7E42a65e35165b71FE41Bf53EA562faDB02c95"
                 }
             ],
             "name": "setAdmin",
