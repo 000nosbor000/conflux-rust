@@ -20,7 +20,7 @@ def encode_u256(number):
     return ("%x" % number).zfill(64)
 
 def number_to_topic(number):
-    return "0x" + encode_u256(number)
+    return f"0x{encode_u256(number)}"
 
 def mapped_address(hex_addr):
     return "0x" + keccak(bytes.fromhex(hex_addr.replace("0x", "")))[12:].hex()
@@ -39,11 +39,15 @@ class PhantomTransactionHashTest(Web3Base):
         assert_equal(self.nodes[0].eth_getBalance(self.evmAccount.address), hex(1 * 10 ** 18))
 
         # deploy EVM space contract
-        self.evmContractAddr = self.deploy_evm_space(EVM_CONTRACT_PATH + ".bytecode")
+        self.evmContractAddr = self.deploy_evm_space(f"{EVM_CONTRACT_PATH}.bytecode")
         print(f'EVM contract: {self.evmContractAddr}')
 
         # import CrossSpaceCall abi
-        abi_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), CROSS_SPACE_CALL_PATH + ".abi")
+        abi_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            f"{CROSS_SPACE_CALL_PATH}.abi",
+        )
+
         assert(os.path.isfile(abi_file))
         abi = open(abi_file).read()
         self.crossSpaceContract = self.w3.eth.contract(abi=abi)
@@ -51,7 +55,7 @@ class PhantomTransactionHashTest(Web3Base):
         # create and charge accounts
         cfx_privkey_1 = "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde0"
         cfx_address_1 = self.w3.eth.account.privateKeyToAccount(cfx_privkey_1).address
-        cfx_address_1 = cfx_address_1[:2] + '1' + cfx_address_1[3:]
+        cfx_address_1 = f'{cfx_address_1[:2]}1{cfx_address_1[3:]}'
         self.cross_space_transfer(mapped_address(cfx_address_1), 1 * 10 ** 18)
 
         self.rpc.send_tx(self.rpc.new_tx(
@@ -63,7 +67,7 @@ class PhantomTransactionHashTest(Web3Base):
 
         cfx_privkey_2 = "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde1"
         cfx_address_2 = self.w3.eth.account.privateKeyToAccount(cfx_privkey_2).address
-        cfx_address_2 = cfx_address_2[:2] + '1' + cfx_address_2[3:]
+        cfx_address_2 = f'{cfx_address_2[:2]}1{cfx_address_2[3:]}'
         self.cross_space_transfer(mapped_address(cfx_address_2), 1 * 10 ** 18)
 
         self.rpc.send_tx(self.rpc.new_tx(

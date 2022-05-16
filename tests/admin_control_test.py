@@ -93,7 +93,7 @@ class AdminControlTest(ConfluxTestFramework):
         self.log.info("Initializing contract")
         genesis_key = self.genesis_priv_key
         genesis_addr = self.genesis_addr
-        self.log.info("genesis_addr={}".format(encode_hex_0x(genesis_addr)))
+        self.log.info(f"genesis_addr={encode_hex_0x(genesis_addr)}")
         nonce = 0
         gas_price = 1
         gas = CONTRACT_DEFAULT_GAS
@@ -124,7 +124,7 @@ class AdminControlTest(ConfluxTestFramework):
             sender_key=priv_key,
             storage_limit=512)
         contract_addr = self.wait_for_tx([tx], True)[0]['contractCreated']
-        self.log.info("contract_addr={}".format(contract_addr))
+        self.log.info(f"contract_addr={contract_addr}")
         assert_equal(client.get_collateral_for_storage(addr), 512 * 976562500000000)
         assert_equal(client.get_balance(contract_addr), 0)
 

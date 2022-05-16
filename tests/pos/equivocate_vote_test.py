@@ -17,7 +17,10 @@ from test_framework.util import *
 class PosEquivocateVoteTest(DefaultConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.conf_parameters["vrf_proposal_threshold"] = '"{}"'.format(int_to_hex(int(2 ** 256 - 1)))
+        self.conf_parameters[
+            "vrf_proposal_threshold"
+        ] = f'"{int_to_hex(int(2 ** 256 - 1))}"'
+
         self.conf_parameters["pos_pivot_decision_defer_epoch_count"] = '120'
         self.conf_parameters["pos_round_per_term"] = '10'
 

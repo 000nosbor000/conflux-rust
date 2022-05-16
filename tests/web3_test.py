@@ -107,7 +107,7 @@ class Web3Test(ConfluxTestFramework):
         client = RpcClient(self.nodes[0])
         cross_space = "0x0888000000000000000000000000000000000006"
 
-        data = decode_hex(f"0x36201722")
+        data = decode_hex("0x36201722")
         genesis_addr = self.genesis_addr
         tx = client.new_tx(value=0, receiver=cross_space, data=data, nonce=self.get_nonce(genesis_addr),
                            gas=10000000)

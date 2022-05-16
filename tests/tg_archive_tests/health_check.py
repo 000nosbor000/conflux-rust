@@ -175,11 +175,7 @@ class ConsensusExecutionStatus(object):
             self.deferred_logs_bloom_hash == other.deferred_logs_bloom_hash
 
     def __str__(self):
-        return "ConsensusExecutionStatus(hash={}, deferred_state_root={}, deferred_receipt_root={}, deferred_logs_bloom_hash={})".format(
-            self.hash,
-            self.deferred_state_root,
-            self.deferred_receipt_root,
-            self.deferred_logs_bloom_hash)
+        return f"ConsensusExecutionStatus(hash={self.hash}, deferred_state_root={self.deferred_state_root}, deferred_receipt_root={self.deferred_receipt_root}, deferred_logs_bloom_hash={self.deferred_logs_bloom_hash})"
 
 
 class ConsensusSnapshot(object):
@@ -192,49 +188,74 @@ class ConsensusSnapshot(object):
 
     def add_block(self, block):
         if block.hash in self.block_status_verified:
-            verified_block = self.block_status_verified[block.hash]
             if block.block_status != BlockStatus.Pending:
-                assert block.block_status == verified_block.block_status, "peer[{}] block[{}] status[{}], expect [{}]".format(
-                    self.peer_id, block.hash, block.block_status, verified_block.block_status)
-                assert block.adaptive == verified_block.adaptive, "peer[{}] block[{}] adaptive[{}], expect [{}]".format(
-                    self.peer_id, block.hash, block.adaptive, verified_block.adaptive)
-                assert block.era_block_hash == verified_block.era_block_hash or \
-                    block.era_block_hash == DEFAULT_HASH, "peer[{}] block[{}] era_block_hash[{}], expect [{}]".format(
-                        self.peer_id, block.hash, block.era_block_hash, verified_block.era_block_hash)
+                verified_block = self.block_status_verified[block.hash]
+                assert (
+                    block.block_status == verified_block.block_status
+                ), f"peer[{self.peer_id}] block[{block.hash}] status[{block.block_status}], expect [{verified_block.block_status}]"
+
+                assert (
+                    block.adaptive == verified_block.adaptive
+                ), f"peer[{self.peer_id}] block[{block.hash}] adaptive[{block.adaptive}], expect [{verified_block.adaptive}]"
+
+                assert block.era_block_hash in [
+                    verified_block.era_block_hash,
+                    DEFAULT_HASH,
+                ], f"peer[{self.peer_id}] block[{block.hash}] era_block_hash[{block.era_block_hash}], expect [{verified_block.era_block_hash}]"
+
         elif block.hash in self.block_status_unverified:
             unverified_block = self.block_status_unverified[block.hash]
             if unverified_block.block_status == BlockStatus.Pending:
                 self.block_status_unverified[block.hash] = block
-            else:
-                if block.block_status != BlockStatus.Pending:
-                    assert block.block_status == unverified_block.block_status, "peer[{}] block[{}] status[{}], expect [{}]".format(
-                        self.peer_id, block.hash, block.block_status, unverified_block.block_status)
-                    assert block.adaptive == unverified_block.adaptive, "peer[{}] block[{}] adaptive[{}], expect [{}]".format(
-                        self.peer_id, block.hash, block.adaptive, unverified_block.adaptive)
-                    assert block.era_block_hash == unverified_block.era_block_hash or \
-                        block.era_block_hash == DEFAULT_HASH or \
-                        unverified_block.era_block_hash == DEFAULT_HASH, "peer[{}] block[{}] era_block_hash[{}], expect [{}]".format(
-                            self.peer_id, block.hash, block.era_block_hash, unverified_block.era_block_hash)
+            elif block.block_status != BlockStatus.Pending:
+                assert (
+                    block.block_status == unverified_block.block_status
+                ), f"peer[{self.peer_id}] block[{block.hash}] status[{block.block_status}], expect [{unverified_block.block_status}]"
+
+                assert (
+                    block.adaptive == unverified_block.adaptive
+                ), f"peer[{self.peer_id}] block[{block.hash}] adaptive[{block.adaptive}], expect [{unverified_block.adaptive}]"
+
+                assert (
+                    block.era_block_hash == unverified_block.era_block_hash
+                    or block.era_block_hash == DEFAULT_HASH
+                    or unverified_block.era_block_hash == DEFAULT_HASH
+                ), f"peer[{self.peer_id}] block[{block.hash}] era_block_hash[{block.era_block_hash}], expect [{unverified_block.era_block_hash}]"
+
         else:
             self.block_status_unverified[block.hash] = block
 
     def add_exec(self, exec):
         if exec.hash in self.exec_status_verified:
             verified_exec = self.exec_status_verified[exec.hash]
-            assert exec.deferred_state_root == verified_exec.deferred_state_root, "peer[{}] block[{}] deferred_state_root[{}], expect[{}]".format(
-                self.peer_id, exec.hash, exec.deferred_state_root, verified_exec.deferred_state_root)
-            assert exec.deferred_receipt_root == verified_exec.deferred_receipt_root, "peer[{}] block[{}] deferred_receipt_root[{}], expect[{}]".format(
-                self.peer_id, exec.hash, exec.deferred_receipt_root, verified_exec.deferred_receipt_root)
-            assert exec.deferred_logs_bloom_hash == verified_exec.deferred_logs_bloom_hash, "peer[{}] block[{}] deferred_logs_bloom_hash[{}], expect[{}]".format(
-                self.peer_id, exec.hash, exec.deferred_logs_bloom_hash, verified_exec.deferred_logs_bloom_hash)
+            assert (
+                exec.deferred_state_root == verified_exec.deferred_state_root
+            ), f"peer[{self.peer_id}] block[{exec.hash}] deferred_state_root[{exec.deferred_state_root}], expect[{verified_exec.deferred_state_root}]"
+
+            assert (
+                exec.deferred_receipt_root == verified_exec.deferred_receipt_root
+            ), f"peer[{self.peer_id}] block[{exec.hash}] deferred_receipt_root[{exec.deferred_receipt_root}], expect[{verified_exec.deferred_receipt_root}]"
+
+            assert (
+                exec.deferred_logs_bloom_hash
+                == verified_exec.deferred_logs_bloom_hash
+            ), f"peer[{self.peer_id}] block[{exec.hash}] deferred_logs_bloom_hash[{exec.deferred_logs_bloom_hash}], expect[{verified_exec.deferred_logs_bloom_hash}]"
+
         elif exec.hash in self.exec_status_unverified:
             unverified_exec = self.exec_status_unverified[exec.hash]
-            assert exec.deferred_state_root == unverified_exec.deferred_state_root, "peer[{}] block[{}] deferred_state_root[{}], expect[{}]".format(
-                self.peer_id, exec.hash, exec.deferred_state_root, unverified_exec.deferred_state_root)
-            assert exec.deferred_receipt_root == unverified_exec.deferred_receipt_root, "peer[{}] block[{}] deferred_receipt_root[{}], expect[{}]".format(
-                self.peer_id, exec.hash, exec.deferred_receipt_root, unverified_exec.deferred_receipt_root)
-            assert exec.deferred_logs_bloom_hash == unverified_exec.deferred_logs_bloom_hash, "peer[{}] block[{}] deferred_logs_bloom_hash[{}], expect[{}]".format(
-                self.peer_id, exec.hash, exec.deferred_logs_bloom_hash, unverified_exec.deferred_logs_bloom_hash)
+            assert (
+                exec.deferred_state_root == unverified_exec.deferred_state_root
+            ), f"peer[{self.peer_id}] block[{exec.hash}] deferred_state_root[{exec.deferred_state_root}], expect[{unverified_exec.deferred_state_root}]"
+
+            assert (
+                exec.deferred_receipt_root == unverified_exec.deferred_receipt_root
+            ), f"peer[{self.peer_id}] block[{exec.hash}] deferred_receipt_root[{exec.deferred_receipt_root}], expect[{unverified_exec.deferred_receipt_root}]"
+
+            assert (
+                exec.deferred_logs_bloom_hash
+                == unverified_exec.deferred_logs_bloom_hash
+            ), f"peer[{self.peer_id}] block[{exec.hash}] deferred_logs_bloom_hash[{exec.deferred_logs_bloom_hash}], expect[{unverified_exec.deferred_logs_bloom_hash}]"
+
         else:
             self.exec_status_unverified[exec.hash] = exec
 
@@ -256,18 +277,13 @@ class BFTCommit(object):
             self.timestamp == other.timestamp
 
     def __str__(self):
-        return "BFTCommit(epoch={}, commit={}, round={}, parent={}, timestamp={})".format(
-            self.epoch,
-            self.commit,
-            self.round,
-            self.parent,
-            self.timestamp)
+        return f"BFTCommit(epoch={self.epoch}, commit={self.commit}, round={self.round}, parent={self.parent}, timestamp={self.timestamp})"
 
 
 class BFTSnashot(object):
     def __init__(self, peer_id):
         self.peer_id = peer_id
-        self.round_to_commit = dict()
+        self.round_to_commit = {}
         self.last_commited = None
         self.round_verified = set()
         self.round_unverified = set()
@@ -276,8 +292,10 @@ class BFTSnashot(object):
         bft_commit = BFTCommit(json_data)
         self.last_commited = bft_commit
         if bft_commit.round in self.round_to_commit:
-            assert bft_commit == self.round_to_commit[bft_commit.round], "peer[{}] round=[{}] expected[{}] found[{}]".format(
-                self.peer_id, bft_commit.round, str(self.round_to_commit[bft_commit.round]), str(bft_commit))
+            assert (
+                bft_commit == self.round_to_commit[bft_commit.round]
+            ), f"peer[{self.peer_id}] round=[{bft_commit.round}] expected[{str(self.round_to_commit[bft_commit.round])}] found[{str(bft_commit)}]"
+
         self.round_to_commit[bft_commit.round] = bft_commit
         if bft_commit.round not in self.round_verified and bft_commit.round not in self.round_unverified:
             self.round_unverified.add(bft_commit.round)
@@ -363,10 +381,7 @@ class TreeGraphTracing(ConfluxTestFramework):
         self._predicates = []
         self._stopped_peers = []
         self._peer_nonce = []
-        if txs_file is None:
-            self._block_txs = {}
-        else:
-            self._block_txs = json.load(open(txs_file, 'r'))
+        self._block_txs = {} if txs_file is None else json.load(open(txs_file, 'r'))
 
     def _retrieve_alive_peers(self, phase):
         alive_peer_indices = {}
@@ -383,13 +398,13 @@ class TreeGraphTracing(ConfluxTestFramework):
                 with self._peer_lock:
                     chosen_peer = self._stopped_peers[random.randint(
                         0, len(self._stopped_peers) - 1)]
-                    self.log.info("starting {}".format(chosen_peer))
+                    self.log.info(f"starting {chosen_peer}")
                     self.start_node(chosen_peer, phase_to_wait=None)
                     self._snapshots[chosen_peer].start()
-                    self.log.info("started {}".format(chosen_peer))
+                    self.log.info(f"started {chosen_peer}")
                     self._stopped_peers.remove(chosen_peer)
         except Exception as e:
-            self.log.info('got exception[{}] during start'.format(repr(e)))
+            self.log.info(f'got exception[{repr(e)}] during start')
             self.persist_snapshot()
             raise e
 
@@ -411,7 +426,7 @@ class TreeGraphTracing(ConfluxTestFramework):
                     0, len(alive_peer_indices) - 1)]
                 if self._snapshots[chosen_peer].bft.last_commited is None:
                     return
-                self.log.info("stopping {}".format(chosen_peer))
+                self.log.info(f"stopping {chosen_peer}")
                 # retrieve new ready blocks before stopping it
                 new_blocks = self.nodes[chosen_peer].sync_graph_state()
                 self._snapshots[chosen_peer].new_blocks(
@@ -420,9 +435,9 @@ class TreeGraphTracing(ConfluxTestFramework):
                 self.stop_node(chosen_peer, kill=True)
                 self._stopped_peers.append(chosen_peer)
                 self._snapshots[chosen_peer].stop()
-                self.log.info("stopped {}".format(chosen_peer))
+                self.log.info(f"stopped {chosen_peer}")
         except Exception as e:
-            self.log.info('got exception[{}] during crash'.format(repr(e)))
+            self.log.info(f'got exception[{repr(e)}] during crash')
             self.persist_snapshot()
             raise e
 
@@ -440,12 +455,12 @@ class TreeGraphTracing(ConfluxTestFramework):
                 # We need peer[0] to run forever as a reference
                 chosen_peer = alive_peer_indices[random.randint(
                     1, len(alive_peer_indices) - 1)]
-                self.log.info("enable db crash {}".format(chosen_peer))
+                self.log.info(f"enable db crash {chosen_peer}")
                 self.nodes[chosen_peer].save_node_db()
                 self.nodes[chosen_peer].set_db_crash(
                     CRASH_EXIT_PROBABILITY, CRASH_EXIT_CODE)
         except Exception as e:
-            self.log.info('got exception[{}] during db crash'.format(repr(e)))
+            self.log.info(f'got exception[{repr(e)}] during db crash')
             self.persist_snapshot()
             raise e
 
@@ -476,12 +491,12 @@ class TreeGraphTracing(ConfluxTestFramework):
                     0, len(alive_peer_indices) - 1)]
                 txs = self._generate_txs(chosen_peer, NUM_TX_PER_BLOCK)
                 block_hash = RpcClient(self.nodes[chosen_peer]).generate_block(NUM_TX_PER_BLOCK)
-                self.log.info("peer[{}] generate block[{}] and [{}] txs".format(
-                    chosen_peer,
-                    block_hash,
-                    len(txs)))
+                self.log.info(
+                    f"peer[{chosen_peer}] generate block[{block_hash}] and [{len(txs)}] txs"
+                )
+
         except Exception as e:
-            self.log.info('got exception[{}]'.format(repr(e)))
+            self.log.info(f'got exception[{repr(e)}]')
             self.persist_snapshot()
             raise e
 
@@ -495,10 +510,7 @@ class TreeGraphTracing(ConfluxTestFramework):
                     delta = node.consensus_graph_state()
                     new_blocks = node.sync_graph_state()
                     bft_commits = node.bft_state()
-                    self.log.info("peer[{}] bftEvents=[{}]".format(
-                        i,
-                        json.dumps(bft_commits)
-                    ))
+                    self.log.info(f"peer[{i}] bftEvents=[{json.dumps(bft_commits)}]")
                     snapshot.update(delta)
                     snapshot.new_blocks(new_blocks['readyBlockVec'])
                     snapshot.new_commits(bft_commits['bftEvents'])
@@ -506,7 +518,7 @@ class TreeGraphTracing(ConfluxTestFramework):
                 for predicate in self._predicates:
                     predicate(self._snapshots, self._stopped_peers)
         except Exception as e:
-            self.log.info('got exception[{}] during verify'.format(repr(e)))
+            self.log.info(f'got exception[{repr(e)}] during verify')
             self.persist_snapshot()
             raise e
 
@@ -527,7 +539,7 @@ class TreeGraphTracing(ConfluxTestFramework):
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, auto_recovery=True, is_consortium=True)
-        for i in range(0, self.num_nodes):
+        for i in range(self.num_nodes):
             self.start_node(i, extra_args=["--tg_archive"], phase_to_wait=None)
 
     def setup_network(self):
@@ -554,17 +566,6 @@ class TreeGraphTracing(ConfluxTestFramework):
 
     def persist_snapshot(self):
         return
-        self.log.info("saving txs to txs.json")
-        with open('txs.json', 'w') as fp:
-            fp.write(json.dumps(self._block_txs))
-        self.log.info("txs saved to txs.json")
-        for (index, snapshot) in enumerate(self._snapshots):
-            self.log.info(
-                'saving snapshot {} to snapshot_{}.json'.format(index, index))
-            with open('snapshot_{}.json'.format(index), 'w') as fp:
-                fp.write(json.dumps(snapshot.to_json()))
-            self.log.info(
-                'snapshot {} saved to snapshot_{}.json'.format(index, index))
 
     def run_test(self):
         if self._replay:
@@ -666,7 +667,9 @@ class ExecutionStatusPredicate(Predicate):
 
     def verify_blocks(self, blocks):
         for i in range(1, len(blocks)):
-            assert blocks[i] == blocks[0], "check exec status mismatch for block[{}], expected[{}], but [{}] found".format(blocks[i].hash, str(blocks[0]), str(blocks[i]))
+            assert (
+                blocks[i] == blocks[0]
+            ), f"check exec status mismatch for block[{blocks[i].hash}], expected[{str(blocks[0])}], but [{str(blocks[i])}] found"
 
     def verify_snapshots(self, snapshots, hashes):
         for h in hashes:
@@ -724,8 +727,7 @@ class BFTLivenessPredicate(Predicate):
                 continue
             now = time.time()
             if now - snapshot.bft.last_commited.received_timestamp > self.timeout:
-                assert False, "peer[{}] bft commit timeout".format(
-                    snapshot.peer_id)
+                assert False, f"peer[{snapshot.peer_id}] bft commit timeout"
 
 
 class BFTCommitPredicatePredicate(Predicate):
@@ -734,7 +736,7 @@ class BFTCommitPredicatePredicate(Predicate):
 
     def verify_commits(self, round, commits):
         for i in range(1, len(commits)):
-            assert commits[0] == commits[i], 'round[{}] mismatch'.format(round)
+            assert commits[0] == commits[i], f'round[{round}] mismatch'
 
     def verify_snapshots(self, snapshots, rounds):
         for round in rounds:
@@ -747,11 +749,13 @@ class BFTCommitPredicatePredicate(Predicate):
 
     def __call__(self, snapshots, stopped_peers):
         verified = {}
-        for (i, snapshot) in enumerate(snapshots):
+        for snapshot in snapshots:
             for round in snapshot.bft.round_verified:
                 if round in verified:
-                    assert verified[round] == snapshot.bft.round_to_commit[round], "mismatch verified round[{}]".format(
-                        round)
+                    assert (
+                        verified[round] == snapshot.bft.round_to_commit[round]
+                    ), f"mismatch verified round[{round}]"
+
                 else:
                     verified[round] = snapshot.bft.round_to_commit[round]
         round_verified = set(verified.keys())

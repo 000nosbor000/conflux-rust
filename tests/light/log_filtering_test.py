@@ -74,7 +74,7 @@ class LogFilteringTest(ConfluxTestFramework):
         _, contractAddr2 = self.deploy_contract(sender, priv_key, bytecode)
 
         # call method multiple times
-        for ii in range(0, NUM_CALLS - 3):
+        for _ in range(NUM_CALLS - 3):
             self.call_contract(sender, priv_key, contractAddr, encode_hex_0x(keccak(b"foo()")))
 
         # make sure we have enough blocks to be certain about the validity of previous blocks
@@ -136,7 +136,7 @@ class LogFilteringTest(ConfluxTestFramework):
         assert_equal(self.rpc[LIGHTNODE].get_code(address, epoch), self.rpc[FULLNODE0].get_code(address, epoch))
 
     def address_to_topic(self, address):
-        return "0x" + address[2:].zfill(64)
+        return f"0x{address[2:].zfill(64)}"
 
     def number_to_topic(self, number):
         return "0x" + ("%x" % number).zfill(64)

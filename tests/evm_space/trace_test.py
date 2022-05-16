@@ -24,7 +24,7 @@ def encode_bytes20(hex):
     return hex.ljust(64, '0')
 
 def number_to_topic(number):
-    return "0x" + encode_u256(number)
+    return f"0x{encode_u256(number)}"
 
 class TraceTest(Web3Base):
     def run_test(self):
@@ -128,8 +128,7 @@ class TraceTest(Web3Base):
         self.rpc.generate_blocks(20, 1)
         receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         assert_equal(receipt["status"], 1)
-        addr = receipt["contractAddress"]
-        return addr
+        return receipt["contractAddress"]
 
 if __name__ == "__main__":
     TraceTest().main()

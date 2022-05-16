@@ -79,7 +79,7 @@ class ClearAdminTest(ConfluxTestFramework):
         self.rpc.send_tx(tx_create, True)
         receipt = self.rpc.get_transaction_receipt(tx_create.hash_hex())
         address = receipt["contractCreated"]
-        self.log.info("  contract created at %s" % address)
+        self.log.info(f"  contract created at {address}")
         assert(address is not None)
 
         self.log.info("Test clear admin at contract creation through create2factory")
@@ -87,7 +87,10 @@ class ClearAdminTest(ConfluxTestFramework):
         salt = 0
         data = create2factory.functions.deploy(create_data, salt).buildTransaction({"to":create2factory_addr, **self.tx_conf})["data"]
         # Compute the contract address.
-        clear_admin_test_contract_addr = Web3.toChecksumAddress("0x" + self.rpc.call(create2factory_addr, data)[-40:])
+        clear_admin_test_contract_addr = Web3.toChecksumAddress(
+            f"0x{self.rpc.call(create2factory_addr, data)[-40:]}"
+        )
+
         # Deploy the contract.
         self.call_contract(genesis_addr, genesis_key, create2factory_addr, data, value=0)
         assert_equal(self.rpc.get_admin(clear_admin_test_contract_addr), null_addr)
@@ -106,7 +109,10 @@ class ClearAdminTest(ConfluxTestFramework):
         new_raw_create = new_contract_to_deploy.constructor().buildTransaction(self.tx_conf)
         create_data = new_raw_create["data"]
         data = clear_admin_test_contract.functions.deployAndHijackAdmin(create_data).buildTransaction({"to":clear_admin_test_contract_addr, **self.tx_conf})["data"]
-        new_contract_addr = "0x" + self.rpc.call(clear_admin_test_contract_addr, data)[-40:]
+        new_contract_addr = (
+            f"0x{self.rpc.call(clear_admin_test_contract_addr, data)[-40:]}"
+        )
+
         self.call_contract(test_account_addr, test_account_key, clear_admin_test_contract_addr, data, value=123)
         # Check owner of the new contract isn't the "evil address" or null address.
         assert_equal(self.rpc.get_admin(new_contract_addr), test_account_addr)
@@ -118,7 +124,10 @@ class ClearAdminTest(ConfluxTestFramework):
         tx = self.rpc.new_contract_tx(receiver=contract, data_hex=data_hex, sender=sender, priv_key=priv_key, value=value, storage_limit=storage_limit, gas=gas)
         assert_equal(self.rpc.send_tx(tx, True), tx.hash_hex())
         receipt = self.rpc.get_transaction_receipt(tx.hash_hex())
-        self.log.info("call_contract storage collateral change={}".format((self.rpc.get_collateral_for_storage(sender) - c0) // COLLATERAL_UNIT_IN_DRIP))
+        self.log.info(
+            f"call_contract storage collateral change={(self.rpc.get_collateral_for_storage(sender) - c0) // COLLATERAL_UNIT_IN_DRIP}"
+        )
+
         return receipt
 
 if __name__ == "__main__":

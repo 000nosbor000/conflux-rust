@@ -52,9 +52,10 @@ class TxRelayTest(ConfluxTestFramework):
     def generate_incorrect_block(self, node=None):
         if node is None: node = self.random_full_node()
 
-        blame_info = {}
-        blame_info['blame'] = "0x1"
-        blame_info['deferredStateRoot'] = "0x1111111111111111111111111111111111111111111111111111111111111111"
+        blame_info = {
+            'blame': "0x1",
+            'deferredStateRoot': "0x1111111111111111111111111111111111111111111111111111111111111111",
+        }
 
         return self.nodes[node].test_generateblockwithblameinfo(1, 0, blame_info)
 
@@ -66,7 +67,7 @@ class TxRelayTest(ConfluxTestFramework):
         # ------------------------------------------------
         # send transactions
         self.log.info(f"Sending {num_txs} txs through the light node...")
-        for nonce in range(0, num_txs):
+        for nonce in range(num_txs):
             # generate random account and value
             receiver, _ = self.rpc[LIGHTNODE].rand_account()
             value = random.randint(1000, 100000)
@@ -109,7 +110,7 @@ class TxRelayTest(ConfluxTestFramework):
 
         self.log.info(f"Pass 1 - all txs relayed\n")
         # ------------------------------------------------
-        self.log.info(f"Retrieving txs through light node...")
+        self.log.info("Retrieving txs through light node...")
 
         # sync blocks to make sure the light client has the header with the latest state
         self.log.info("syncing blocks...")
@@ -122,7 +123,7 @@ class TxRelayTest(ConfluxTestFramework):
 
         self.log.info(f"Pass 2 - all txs retrieved\n")
         # ------------------------------------------------
-        self.log.info(f"Generating incorrect blocks...")
+        self.log.info("Generating incorrect blocks...")
 
         # save the latest epoch, guaranteed to have all the new balances
         epoch_before_blamed_blocks = self.rpc[FULLNODE0].epoch_number()
@@ -146,7 +147,10 @@ class TxRelayTest(ConfluxTestFramework):
 
         self.log.info(f"Pass 3 - blame info correct\n")
         # ------------------------------------------------
-        self.log.info(f"Checking the resulting account balances through the light node...")
+        self.log.info(
+            "Checking the resulting account balances through the light node..."
+        )
+
 
         # sync blocks to make sure the light client has the header with the latest state
         self.log.info("syncing blocks...")

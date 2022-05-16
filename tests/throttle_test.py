@@ -26,7 +26,7 @@ class ThrottleRpcTests(ConfluxTestFramework):
             # just add the public rpc section as a placeholder.
             fp.write("[rpc]")
 
-        self.conf_parameters["throttling_conf"] = "'{}'".format(throttle_conf)
+        self.conf_parameters["throttling_conf"] = f"'{throttle_conf}'"
 
         ConfluxTestFramework.setup_chain(self)
 

@@ -14,7 +14,7 @@ class TestGetBlockRewardInfo(RpcClient):
         f_pivot = max(f1, f2)
         f_ref = min(f1, f2)
         b = self.generate_block()
-        for i in range(0, 10):
+        for _ in range(10):
             self.generate_block()
         time.sleep(1)
 
@@ -26,7 +26,7 @@ class TestGetBlockRewardInfo(RpcClient):
             "Invalid parameters: epoch",
             self.get_block_reward_info, self.EPOCH_NUM(epoch - 10))
 
-        for i in range(0, 7):
+        for _ in range(7):
             self.generate_block()
         time.sleep(1)
 
@@ -38,8 +38,8 @@ class TestGetBlockRewardInfo(RpcClient):
             if reward_info['blockHash'] == b:
                 assert_equal(reward_info['baseReward'], '0x6124fee993bc0000')
                 assert_equal(reward_info['totalReward'], '0x6124fee99ad28a20')
-                assert_equal(reward_info['txFee'], '0x0')
             else:
                 assert_equal(reward_info['baseReward'], '0x6122824420644000')
                 assert_equal(reward_info['totalReward'], '0x61228244277a9bad')
-                assert_equal(reward_info['txFee'], '0x0')
+
+            assert_equal(reward_info['txFee'], '0x0')

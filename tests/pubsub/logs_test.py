@@ -91,7 +91,7 @@ class PubSubTest(ConfluxTestFramework):
         assert_equal(len(logs1), 2 * NUM_CALLS)
         assert_equal(len(logs2), NUM_CALLS)
 
-        self.log.info(f"Pass -- retrieved logs with no fork")
+        self.log.info("Pass -- retrieved logs with no fork")
 
         # create alternative fork
         old_tip = self.rpc[FULLNODE0].best_block_hash()
@@ -110,7 +110,10 @@ class PubSubTest(ConfluxTestFramework):
         self.log.info(f"Tip: {old_tip[:20]}... (#{old_tip_epoch}) --> {new_tip[:20]}... (#{new_tip_epoch})")
 
         # block order changed, some transactions need to be re-executed
-        num_to_reexecute = sum(1 for r in receipts if int(r["epochNumber"], 16) > fork_epoch)
+        num_to_reexecute = sum(
+            int(r["epochNumber"], 16) > fork_epoch for r in receipts
+        )
+
 
         msg = await sub_all.next(timeout=5)
         assert(msg["revertTo"] != None)
@@ -119,7 +122,7 @@ class PubSubTest(ConfluxTestFramework):
         logs = [l async for l in sub_all.iter()]
         assert_equal(len(logs), num_to_reexecute)
 
-        self.log.info(f"Pass -- retrieved re-executed logs after fork")
+        self.log.info("Pass -- retrieved re-executed logs after fork")
 
         # create one transaction that is mined but not executed yet
         sync_blocks(self.nodes)
@@ -141,7 +144,7 @@ class PubSubTest(ConfluxTestFramework):
         # this would timeout before #1989 was fixed
         await sub_all.next()
 
-        self.log.info(f"Pass -- test #1989 fix")
+        self.log.info("Pass -- test #1989 fix")
 
     def run_test(self):
         asyncio.get_event_loop().run_until_complete(self.run_async())
@@ -157,8 +160,7 @@ class PubSubTest(ConfluxTestFramework):
     def call_contract(self, sender, priv_key, contract, data_hex):
         tx = self.rpc[FULLNODE0].new_contract_tx(receiver=contract, data_hex=data_hex, sender=sender, priv_key=priv_key, storage_limit=20000)
         assert_equal(self.rpc[FULLNODE0].send_tx(tx, True), tx.hash_hex())
-        receipt = self.rpc[FULLNODE0].get_transaction_receipt(tx.hash_hex())
-        return receipt
+        return self.rpc[FULLNODE0].get_transaction_receipt(tx.hash_hex())
 
     def generate_chain(self, parent, len):
         hashes = [parent]

@@ -43,10 +43,26 @@ class VoteTokenTest(SmartContractBenchBase):
         self.accounts = [a[0] for a in self.new_address_and_transfer(5)]
 
     def generate_transactions(self, i):
-        self.call_contract_function(self.vote_contract, "createIssue",
-                                    [i, Web3.toChecksumAddress(self.token_address), [j for j in range(self.num_of_options)],
-                                     [Web3.toChecksumAddress(priv_to_addr(acc)) for acc in self.accounts], "v"],
-                                    self.default_account_key, self.vote_address, True, True, storage_limit=5120)
+        self.call_contract_function(
+            self.vote_contract,
+            "createIssue",
+            [
+                i,
+                Web3.toChecksumAddress(self.token_address),
+                list(range(self.num_of_options)),
+                [
+                    Web3.toChecksumAddress(priv_to_addr(acc))
+                    for acc in self.accounts
+                ],
+                "v",
+            ],
+            self.default_account_key,
+            self.vote_address,
+            True,
+            True,
+            storage_limit=5120,
+        )
+
         for _ in range(self.num_of_options):
             self.call_contract_function(self.vote_contract, "vote", [i, random.randint(0, self.num_of_options-1)],
                                         self.default_account_key, self.vote_address, True, True, storage_limit=5120)

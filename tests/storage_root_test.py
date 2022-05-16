@@ -138,8 +138,7 @@ class StorageRootTest(ConfluxTestFramework):
     def call_contract(self, sender, priv_key, contract, data_hex):
         tx = self.rpc[FULLNODE0].new_contract_tx(receiver=contract, data_hex=data_hex, sender=sender, priv_key=priv_key)
         assert_equal(self.rpc[FULLNODE0].send_tx(tx, True), tx.hash_hex())
-        receipt = self.rpc[FULLNODE0].get_transaction_receipt(tx.hash_hex())
-        return receipt
+        return self.rpc[FULLNODE0].get_transaction_receipt(tx.hash_hex())
 
 if __name__ == "__main__":
     StorageRootTest().main()

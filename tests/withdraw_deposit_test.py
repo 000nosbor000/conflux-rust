@@ -27,10 +27,10 @@ class WithdrawDepositTest(ConfluxTestFramework):
         blocks = []
         for epoch in range(epoch_number + 1):
             blocks.extend(client.block_hashes_by_epoch(client.EPOCH_NUM(epoch)))
-        for (i, block) in enumerate(blocks):
-            if block == block_hash:
-                return i + 1
-        return None
+        return next(
+            (i + 1 for (i, block) in enumerate(blocks) if block == block_hash),
+            None,
+        )
 
 
     def run_test(self):
@@ -53,9 +53,12 @@ class WithdrawDepositTest(ConfluxTestFramework):
 
         total_num_blocks = 2 * 60 * 60 * 24 * 365
         accumulate_interest_rate = [2 ** 80 * total_num_blocks]
-        for _ in range(1000):
-            accumulate_interest_rate.append(accumulate_interest_rate[-1] * (
-                40000 + 1000000 * total_num_blocks) // (total_num_blocks * 1000000))
+        accumulate_interest_rate.extend(
+            accumulate_interest_rate[-1]
+            * (40000 + 1000000 * total_num_blocks)
+            // (total_num_blocks * 1000000)
+            for _ in range(1000)
+        )
 
         # Setup balance for node 0
         node = self.nodes[0]

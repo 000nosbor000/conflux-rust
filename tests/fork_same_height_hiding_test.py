@@ -31,12 +31,12 @@ class SameHeightTest(ConfluxTestFramework):
         for _ in range(n_attack_blocks):
             attacker.generate_block_with_parent(fork_point)
         attacker_cnt = self.nodes[0].getblockcount()
-        self.log.info("Attacker block count:" + str(attacker_cnt))
+        self.log.info(f"Attacker block count:{str(attacker_cnt)}")
         self.log.info("Honest node generate")
-        for _ in range(int(2000/n_generate_batch)):
+        for _ in range(2000 // n_generate_batch):
             batch_generate(victim, n_generate_batch, self.log)
             cnt = self.nodes[1].getblockcount()
-            self.log.info("Honest block count: " + str(cnt))
+            self.log.info(f"Honest block count: {str(cnt)}")
         connect_nodes(self.nodes, 0, 1)
         self.log.info("Nodes connected")
         pass_test = False
@@ -45,7 +45,7 @@ class SameHeightTest(ConfluxTestFramework):
             self.nodes[1].generate_empty_blocks(1)
             target += 1
             cnt = self.nodes[1].getblockcount()
-            self.log.info("Honest block count: " + str(cnt))
+            self.log.info(f"Honest block count: {str(cnt)}")
             if cnt >= target:
                 pass_test = True
                 break

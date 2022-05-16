@@ -29,7 +29,7 @@ def encode_bytes20(hex):
     return hex.ljust(64, '0')
 
 def number_to_topic(number):
-    return "0x" + encode_u256(number)
+    return f"0x{encode_u256(number)}"
 
 class PhantomTransactionTest(ConfluxTestFramework):
     def set_test_params(self):
@@ -468,8 +468,7 @@ class PhantomTransactionTest(ConfluxTestFramework):
         self.rpc.generate_blocks(20, 1)
         receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         assert_equal(receipt["status"], 1)
-        addr = receipt["contractAddress"]
-        return addr
+        return receipt["contractAddress"]
 
     def construct_evm_tx(self, receiver, data_hex, nonce):
         signed = self.evmAccount.signTransaction({

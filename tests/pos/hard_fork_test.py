@@ -21,7 +21,7 @@ from test_framework.blocktools import encode_hex_0x
 
 
 def address_to_topic(address):
-    return "0x" + address[2:].zfill(64)
+    return f"0x{address[2:].zfill(64)}"
 REGISTER_TOPIC = encode_hex_0x(keccak(b"Register(bytes32,bytes,bytes)"))
 INCREASE_STAKE_TOPIC = encode_hex_0x(keccak(b"IncreaseStake(bytes32,uint64)"))
 
@@ -29,7 +29,10 @@ class ExampleTest(ConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 7
         # 1e-9 chance of an empty round with no proposer.
-        self.conf_parameters["vrf_proposal_threshold"] = '"{}"'.format(int_to_hex(int(2 ** 256 / 300 * 20)))
+        self.conf_parameters[
+            "vrf_proposal_threshold"
+        ] = f'"{int_to_hex(int(2 ** 256 / 300 * 20))}"'
+
         self.conf_parameters["pos_pivot_decision_defer_epoch_count"] = '120'
         # self.conf_parameters["log_level"] = '"trace"'
         self.conf_parameters["dev_allow_phase_change_without_peer"] = "false"
@@ -89,7 +92,7 @@ class ExampleTest(ConfluxTestFramework):
                 assert pos_identifier in pub_keys_map
                 voting_power_map[pos_identifier] = parse_as_int(log["data"])
         with open(os.path.join(self.options.tmpdir, "public_keys"), "w") as f:
-            for pos_identifier in pub_keys_map.keys():
+            for pos_identifier in pub_keys_map:
                 f.write(",".join([pub_keys_map[pos_identifier][0][2:], pub_keys_map[pos_identifier][1][2:], str(voting_power_map[pos_identifier])]) + "\n")
         initialize_tg_config(self.options.tmpdir, len(self.nodes), len(self.nodes), DEFAULT_PY_TEST_CHAIN_ID, pkfile="public_keys")
 
@@ -121,12 +124,12 @@ class ExampleTest(ConfluxTestFramework):
                 self.stop_node(5, clean=True)
                 self.start_node(5, phase_to_wait=None)
                 self.nodes[5].wait_for_recovery(["NormalSyncPhase"], 30)
-            if i == 12:
+            elif i == 12:
                 self.maybe_restart_node(5, 1, 0)
-            if i == 15:
+            elif i == 15:
                 assert_equal(int(client.pos_get_account(pos_identifier)["status"]["availableVotes"], 0), 2000)
                 client.pos_retire_self()
-            if i == 30:
+            elif i == 30:
                 self.maybe_restart_node(5, 1, 1)
             # Retire node 3 after 5 min.
             # Generate enough PoW block for PoS to progress

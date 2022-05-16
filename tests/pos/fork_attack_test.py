@@ -20,7 +20,10 @@ CHAIN_LEN = 1000
 class PosForkAttackTest(DefaultConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.conf_parameters["vrf_proposal_threshold"] = '"{}"'.format(int_to_hex(int(2 ** 256 - 1)))
+        self.conf_parameters[
+            "vrf_proposal_threshold"
+        ] = f'"{int_to_hex(int(2 ** 256 - 1))}"'
+
         self.conf_parameters["pos_pivot_decision_defer_epoch_count"] = '120'
         self.conf_parameters["adaptive_weight_beta"] = "1"
         self.conf_parameters["timer_chain_block_difficulty_ratio"] = "3"
@@ -29,10 +32,7 @@ class PosForkAttackTest(DefaultConfluxTestFramework):
         self.pos_parameters["round_time_ms"] = 1000000000
 
     def run_test(self):
-        clients = []
-        for node in self.nodes:
-            clients.append(RpcClient(node))
-
+        clients = [RpcClient(node) for node in self.nodes]
         blocks = clients[0].generate_empty_blocks(CHAIN_LEN)
         sync_blocks(self.nodes)
         last_block = clients[0].block_by_epoch(int_to_hex(CHAIN_LEN // 60 * 60))

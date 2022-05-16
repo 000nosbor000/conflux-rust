@@ -117,9 +117,6 @@ class InvalidMessageTest(ConfluxTestFramework):
 
         sync_blocks(self.nodes)
 
-        # TODO Generate some random blocks that have wrong ref edges
-        pass
-
 
 if __name__ == "__main__":
     # FIXME fix this failed test

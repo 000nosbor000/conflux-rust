@@ -81,10 +81,9 @@ class UnsignedTransaction(rlp.Serializable):
         if not self.eth_like:
             return utils.sha3(
                 rlp.encode(self, UnsignedTransaction))
-        else:
-            eth_like_tx = EthLikeUnsignedTransaction(self)
-            return utils.sha3(
-                rlp.encode(eth_like_tx, EthLikeUnsignedTransaction))
+        eth_like_tx = EthLikeUnsignedTransaction(self)
+        return utils.sha3(
+            rlp.encode(eth_like_tx, EthLikeUnsignedTransaction))
 
     def sign(self, key):
         rawhash = self.get_rawhash()
@@ -141,11 +140,9 @@ class Transaction(rlp.Serializable):
         return eth_utils.encode_hex(self.hash)
 
     def to_dict(self):
-        d = {}
-        for name, _ in self.__class__._meta.fields:
-            d[name] = getattr(self, name)
-        d['sender'] = '0x' + encode_hex(self.sender)
-        d['hash'] = '0x' + encode_hex(self.hash)
+        d = {name: getattr(self, name) for name, _ in self.__class__._meta.fields}
+        d['sender'] = f'0x{encode_hex(self.sender)}'
+        d['hash'] = f'0x{encode_hex(self.hash)}'
         return d
 
     def __eq__(self, other):
@@ -161,7 +158,7 @@ class Transaction(rlp.Serializable):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return '<Transaction(%s)>' % encode_hex(self.hash)[:4]
+        return f'<Transaction({encode_hex(self.hash)[:4]})>'
 
     def __getattr__(self, item):
         return getattr(self.transaction, item)

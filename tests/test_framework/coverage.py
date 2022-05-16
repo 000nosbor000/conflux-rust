@@ -49,9 +49,9 @@ class AuthServiceProxyWrapper():
         return return_val
 
     def _log_call(self):
-        rpc_method = self.auth_service_proxy_instance._service_name
-
         if self.coverage_logfile:
+            rpc_method = self.auth_service_proxy_instance._service_name
+
             with open(self.coverage_logfile, 'a+', encoding='utf8') as f:
                 f.write("%s\n" % rpc_method)
 
@@ -70,8 +70,7 @@ def get_filename(dirname, n_node):
     This file will contain a list of RPC commands covered.
     """
     pid = str(os.getpid())
-    return os.path.join(
-        dirname, "coverage.pid%s.node%s.txt" % (pid, str(n_node)))
+    return os.path.join(dirname, f"coverage.pid{pid}.node{str(n_node)}.txt")
 
 
 def write_all_rpc_commands(dirname, node):

@@ -95,7 +95,7 @@ class SyncCheckpointTests(ConfluxTestFramework):
         for i in range(1, snapshot_epoch + 1):
             try:
                 full_node_client.get_balance(full_node_client.GENESIS_ADDR, full_node_client.EPOCH_NUM(i))
-                raise AssertionError("should not have state for epoch {}".format(i))
+                raise AssertionError(f"should not have state for epoch {i}")
             except ReceivedErrorResponseError as e:
                 assert "State for epoch" in e.response.message
                 assert "does not exist" in e.response.message

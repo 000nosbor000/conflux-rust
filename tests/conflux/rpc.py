@@ -95,7 +95,7 @@ class RpcClient:
         assert_greater_than_or_equal(num_txs, 0)
 
         blocks = []
-        for _ in range(0, num_blocks):
+        for _ in range(num_blocks):
             block_hash = self.generate_block(num_txs, block_size_limit_bytes)
             blocks.append(block_hash)
 
@@ -149,23 +149,21 @@ class RpcClient:
         addr = hex_to_b32_address(addr)
         assert_is_hash_string(pos)
 
-        if epoch is None:
-            res = self.node.cfx_getStorageAt(addr, pos)
-        else:
-            res = self.node.cfx_getStorageAt(addr, pos, epoch)
-
-        return res
+        return (
+            self.node.cfx_getStorageAt(addr, pos)
+            if epoch is None
+            else self.node.cfx_getStorageAt(addr, pos, epoch)
+        )
 
     def get_storage_root(self, addr: str, epoch: str = None) -> str:
         assert_is_hash_string(addr, length=40)
         addr = hex_to_b32_address(addr)
 
-        if epoch is None:
-            res = self.node.cfx_getStorageRoot(addr)
-        else:
-            res = self.node.cfx_getStorageRoot(addr, epoch)
-
-        return res
+        return (
+            self.node.cfx_getStorageRoot(addr)
+            if epoch is None
+            else self.node.cfx_getStorageRoot(addr, epoch)
+        )
 
     def get_code(self, address: str, epoch: str = None) -> str:
         address = hex_to_b32_address(address)
@@ -264,7 +262,7 @@ class RpcClient:
         if epoch is None and block_hash is None:
             return int(self.node.cfx_getNextNonce(addr), 0)
         elif epoch is None:
-            return int(self.node.cfx_getNextNonce(addr, "hash:"+block_hash), 0)
+            return int(self.node.cfx_getNextNonce(addr, f"hash:{block_hash}"), 0)
         else:
             return int(self.node.cfx_getNextNonce(addr, epoch), 0)
 
@@ -339,7 +337,7 @@ class RpcClient:
 
         if receiver is None:
             receiver = self.COINBASE_ADDR
-        
+
         if nonce is None:
             nonce = self.get_nonce(sender)
 
@@ -351,11 +349,8 @@ class RpcClient:
 
         action = eth_utils.decode_hex(receiver)
         tx = UnsignedTransaction(nonce, gas_price, gas, action, value, data, storage_limit, epoch_height, chain_id)
-        
-        if sign:
-            return tx.sign(priv_key)
-        else:
-            return tx
+
+        return tx.sign(priv_key) if sign else tx
 
     def new_contract_tx(self, receiver:str, data_hex:str, sender=None, priv_key=None, nonce=None, gas_price=1, gas=CONTRACT_DEFAULT_GAS, value=0, storage_limit=0, epoch_height=0, chain_id=DEFAULT_PY_TEST_CHAIN_ID):
         if sender is None:
@@ -383,17 +378,13 @@ class RpcClient:
         return self.node.getpeerinfo()
 
     def get_peer(self, node_id: str):
-        for p in self.get_peers():
-            if p["nodeid"] == node_id:
-                return p
-
-        return None
+        return next((p for p in self.get_peers() if p["nodeid"] == node_id), None)
 
     def get_node(self, node_id: str):
         return self.node.net_node(node_id)
 
     def add_node(self, node_id: str, ip: str, port: int):
-        self.node.addnode(node_id, "{}:{}".format(ip, port))
+        self.node.addnode(node_id, f"{ip}:{port}")
 
     def disconnect_peer(self, node_id: str, node_op:str=None) -> int:
         return self.node.net_disconnect_node(node_id, node_op)
@@ -537,10 +528,9 @@ class RpcClient:
     def pos_get_block(self, block):
         if isinstance(block, str) and len(block) == 34:
             return self.node.pos_getBlockByHash(block)
-        else:
-            if isinstance(block, int):
-                block = int_to_hex(block)
-            return self.node.pos_getBlockByNumber(block)
+        if isinstance(block, int):
+            block = int_to_hex(block)
+        return self.node.pos_getBlockByNumber(block)
 
     def pos_proposal_timeout(self):
         return self.node.pos_trigger_timeout("proposal")

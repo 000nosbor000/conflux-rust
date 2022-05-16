@@ -44,7 +44,7 @@ class TestNode:
         self.datadir = datadir
         self.stdout_dir = os.path.join(self.datadir, "stdout")
         self.stderr_dir = os.path.join(self.datadir, "stderr")
-        self.log = os.path.join(self.datadir, "node" + str(index) + ".log")
+        self.log = os.path.join(self.datadir, f"node{str(index)}.log")
         self.remote = remote
         self.no_pssh = no_pssh
         self.rpchost = rpchost
@@ -102,8 +102,7 @@ class TestNode:
             print(self._node_msg("Cleaning up leftover process"))
             self.process.terminate()
             if self.remote == True:
-                cli_kill = "ssh {}@{} killall conflux".format(
-                    self.user, self.ip)
+                cli_kill = f"ssh {self.user}@{self.ip} killall conflux"
                 print(self.ip, self.index, subprocess.Popen(
                     cli_kill, shell=True).wait())
 
@@ -124,19 +123,23 @@ class TestNode:
         if stderr is None:
             stderr = tempfile.NamedTemporaryFile(
                 dir=self.stderr_dir,
-                suffix="_" + str(self.index) + "_" + self.ip,
-                delete=False)
+                suffix=f"_{str(self.index)}_{self.ip}",
+                delete=False,
+            )
+
         if stdout is None:
             stdout = tempfile.NamedTemporaryFile(
                 dir=self.stdout_dir,
-                suffix="_" + str(self.index) + "_" + self.ip,
-                delete=False)
+                suffix=f"_{str(self.index)}_{self.ip}",
+                delete=False,
+            )
+
         self.stderr = stderr
         self.stdout = stdout
         if extra_args is not None:
             self.args += extra_args
         if "--public-address" not in self.args:
-            self.args += ["--public-address", "{}".format(self.ip)]
+            self.args += ["--public-address", f"{self.ip}"]
 
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
@@ -149,20 +152,21 @@ class TestNode:
             # we can just skip the start here.
             if self.no_pssh:
                 ssh_args = '-o "StrictHostKeyChecking no"'
-                cli_mkdir = "ssh {} {}@{} mkdir -p {};".format(
-                    ssh_args, self.user, self.ip, self.datadir
-                )
+                cli_mkdir = f"ssh {ssh_args} {self.user}@{self.ip} mkdir -p {self.datadir};"
                 cli_conf = "scp {3} -r {0} {1}@{2}:`dirname {0}`;".format(
                     self.datadir, self.user, self.ip, ssh_args
                 )
-                cli_kill = "ssh {}@{} killall -9 conflux;".format(self.user, self.ip)
+                cli_kill = f"ssh {self.user}@{self.ip} killall -9 conflux;"
                 cli_exe = 'ssh {} {}@{} "{} > ~/stdout"'.format(
                     ssh_args,
                     self.user,
                     self.ip,
-                    "cd {} && export RUST_BACKTRACE=full && cgexec -g net_cls:limit{} ".format(self.datadir, self.index+1)
-                    + " ".join(self.args),
-                    )
+                    (
+                        f"cd {self.datadir} && export RUST_BACKTRACE=full && cgexec -g net_cls:limit{self.index + 1} "
+                        + " ".join(self.args)
+                    ),
+                )
+
                 print(cli_mkdir + cli_kill + cli_conf + cli_exe)
                 self.process = subprocess.Popen(
                     cli_mkdir + cli_kill + cli_conf + cli_exe,
@@ -187,8 +191,10 @@ class TestNode:
             if not self.remote and self.process.poll() is not None:
                 raise FailedToStartError(
                     self._node_msg(
-                        'conflux exited with status {} during initialization'.
-                        format(self.process.returncode)))
+                        f'conflux exited with status {self.process.returncode} during initialization'
+                    )
+                )
+
             try:
                 self.rpc = get_simple_rpc_proxy(
                     rpc_url(self.index, self.rpchost, self.rpcport),
@@ -222,9 +228,9 @@ class TestNode:
                 if e.code != 500:
                     raise
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("failed to get RPC proxy: index = {}, ip = {}, rpchost = {}, p2pport={}, rpcport = {}, rpc_url = {}".format(
-            self.index, self.ip, self.rpchost, self.port, self.rpcport, rpc_url(self.index, self.rpchost, self.rpcport)
-        ))
+        self._raise_assertion_error(
+            f"failed to get RPC proxy: index = {self.index}, ip = {self.ip}, rpchost = {self.rpchost}, p2pport={self.port}, rpcport = {self.rpcport}, rpc_url = {rpc_url(self.index, self.rpchost, self.rpcport)}"
+        )
 
     def wait_for_recovery(self, phase_to_wait, wait_time):
         self.wait_for_phase(phase_to_wait, wait_time=wait_time)
@@ -249,7 +255,7 @@ class TestNode:
         addr_tmp[0] &= 0x0f
         addr_tmp[0] |= 0x10
         self.addr = addr_tmp
-        self.log.debug("Get node {} nodeid {}".format(self.index, self.key))
+        self.log.debug(f"Get node {self.index} nodeid {self.key}")
 
     def clean_data(self):
         shutil.rmtree(os.path.join(self.datadir, "blockchain_data/blockchain_db"))
@@ -276,9 +282,11 @@ class TestNode:
         self.stderr.seek(0)
         stderr = self.stderr.read().decode('utf-8').strip()
         # TODO: Check how to avoid `pthread lock: Invalid argument`.
-        if stderr != expected_stderr and stderr != "pthread lock: Invalid argument":
-            raise AssertionError("Unexpected stderr {} != {} from {}:{} index={}".format(
-                stderr, expected_stderr, self.ip, self.port, self.index))
+        if stderr not in [expected_stderr, "pthread lock: Invalid argument"]:
+            raise AssertionError(
+                f"Unexpected stderr {stderr} != {expected_stderr} from {self.ip}:{self.port} index={self.index}"
+            )
+
 
         self.stdout.close()
         self.stderr.close()
@@ -323,8 +331,7 @@ class TestNode:
 
         Will throw if bitcoind starts without an error.
         Will throw if an expected_msg is provided and it does not match bitcoind's stdout."""
-        with tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False) as log_stderr, \
-                tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
+        with tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False) as log_stderr, tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
             try:
                 self.start(
                     extra_args,
@@ -364,7 +371,7 @@ class TestNode:
                 if expected_msg is None:
                     assert_msg = "bitcoind should have exited with an error"
                 else:
-                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                    assert_msg = f"bitcoind should have exited with expected error {expected_msg}"
                 self._raise_assertion_error(assert_msg)
 
     def add_p2p_connection(self, p2p_conn, *args, **kwargs):

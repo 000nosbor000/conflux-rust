@@ -82,10 +82,10 @@ class GenerateSampleChain(DefaultConfluxTestFramework):
             nonce_map[key] = wait_for_initial_nonce_for_privkey(self.nodes[0], key)
 
         self.log.info("start to generate %d transactions with about %d seconds", tx_n, tx_n/10/2*self.delay_factor)
-        for i in range(tx_n):
+        value = 1
+        for _ in range(tx_n):
             sender_key = random.choice(list(balance_map))
             nonce = nonce_map[sender_key]
-            value = 1
             receiver_sk = random.choice(list(balance_map))
             balance_map[receiver_sk] += value
             # not enough transaction fee (gas_price * gas_limit) should not happen for now
@@ -118,7 +118,7 @@ class GenerateSampleChain(DefaultConfluxTestFramework):
                 except AssertionError as _:
                     self.nodes[0].p2p.send_protocol_msg(Transactions(transactions=[tx]))
                 if i == 2:
-                    raise AssertionError("Tx {} not confirmed after 30 seconds".format(tx.hash_hex()))
+                    raise AssertionError(f"Tx {tx.hash_hex()} not confirmed after 30 seconds")
 
         for k in balance_map:
             self.log.info("Check account sk:%s addr:%s", bytes_to_int(k), eth_utils.encode_hex(priv_to_addr(k)))
@@ -138,10 +138,9 @@ class GenerateSampleChain(DefaultConfluxTestFramework):
             return False
         if balance == balance_map[k]:
             return True
-        else:
-            self.log.info("Remote balance:%d, local balance:%d", balance, balance_map[k])
-            time.sleep(1)
-            return False
+        self.log.info("Remote balance:%d, local balance:%d", balance, balance_map[k])
+        time.sleep(1)
+        return False
 
     def register_test(self, file_name):
         chain = self.nodes[0].cfx_getChain()

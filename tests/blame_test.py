@@ -20,9 +20,10 @@ class BlameTest(ConfluxTestFramework):
         genesis = self.nodes[0].best_block_hash()
         self.log.info(genesis)
 
-        blame_info = {}
-        blame_info['blame'] = "0x1"
-        blame_info['deferredStateRoot'] = "0x1111111111111111111111111111111111111111111111111111111111111111"
+        blame_info = {
+            'blame': "0x1",
+            'deferredStateRoot': "0x1111111111111111111111111111111111111111111111111111111111111111",
+        }
 
         self.nodes[0].test_generateblockwithblameinfo(1, 0, blame_info)
         h = self.nodes[0].generate_empty_blocks(1)
@@ -35,14 +36,14 @@ class BlameTest(ConfluxTestFramework):
         assert(block_b['blame'] == "0x0")
 
         connect_nodes(self.nodes, 0, 1)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
         block_a1 = client1.block_by_hash(hash_a)
         assert(block_a1['blame'] == "0x1")
 
         self.nodes[0].test_generateblockwithblameinfo(1, 0, blame_info)
         self.nodes[0].test_generateblockwithblameinfo(1, 0, blame_info)
         self.nodes[0].test_generateblockwithblameinfo(1, 0, blame_info)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
         h = self.nodes[1].generate_empty_blocks(1)
         hash_c = h[0]
         block_c1 = client1.block_by_hash(hash_c)

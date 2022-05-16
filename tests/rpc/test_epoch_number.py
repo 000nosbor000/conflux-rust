@@ -46,7 +46,7 @@ class TestEpochNumber(RpcClient):
 
         f1 = self.generate_block_with_parent(root, [])
         # add 3 children for f1 so that f1 become the pivot chain
-        for _ in range(0, 3):
+        for _ in range(3):
             self.generate_block_with_parent(f1, [])
 
         new_epoch = self.epoch_number(self.EPOCH_LATEST_MINED)

@@ -7,9 +7,7 @@ class BlockGenThread(threading.Thread):
     def __init__(self, nodes, log, num_txs=1000, interval_fixed=None, interval_base=1):
         threading.Thread.__init__(self, daemon=True)
         self.nodes = nodes
-        self.clients = []
-        for node in nodes:
-            self.clients.append(RpcClient(node))
+        self.clients = [RpcClient(node) for node in nodes]
         self.log = log
         self.num_txs = num_txs
         self.interval_fixed = interval_fixed
@@ -59,11 +57,13 @@ class PoWGenerateThread(threading.Thread):
         period_start_time = time.time()
         while True:
             i += 1
-            if self.report_progress_blocks is not None:
-                if i % self.report_progress_blocks == 0:
-                    period_elapsed = time.time() - period_start_time
-                    self.log.info("[%s]: %d blocks generated in %f seconds", self.name, self.report_progress_blocks, period_elapsed)
-                    period_start_time = time.time()
+            if (
+                self.report_progress_blocks is not None
+                and i % self.report_progress_blocks == 0
+            ):
+                period_elapsed = time.time() - period_start_time
+                self.log.info("[%s]: %d blocks generated in %f seconds", self.name, self.report_progress_blocks, period_elapsed)
+                period_start_time = time.time()
 
             if self.fixed_period:
                 wait_sec = self.generation_period_ms / 1000

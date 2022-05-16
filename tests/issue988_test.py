@@ -83,11 +83,10 @@ class Issue988Test(ConfluxTestFramework):
         return transaction
 
     def call_contract_function_rpc(self, contract, name, args, contract_addr):
-        func = getattr(contract.functions, name)
-        attrs = {}
         gas_price = 1
         gas = CONTRACT_DEFAULT_GAS
-        attrs["gas"] = int_to_hex(gas)
+        func = getattr(contract.functions, name)
+        attrs = {"gas": int_to_hex(gas)}
         attrs["gasPrice"] = int_to_hex(gas_price)
         attrs["chainId"] = 0
         attrs["to"] = Web3.toChecksumAddress(contract_addr)
@@ -106,7 +105,7 @@ class Issue988Test(ConfluxTestFramework):
 
         genesis_key = self.genesis_priv_key
         genesis_addr = self.genesis_addr
-        self.log.info("genesis_addr={}".format(encode_hex_0x(genesis_addr)))
+        self.log.info(f"genesis_addr={encode_hex_0x(genesis_addr)}")
         nonce = 0
         gas_price = 1
         gas = CONTRACT_DEFAULT_GAS
@@ -136,7 +135,7 @@ class Issue988Test(ConfluxTestFramework):
         contract_addr = self.wait_for_tx([tx], True)[0]['contractCreated']
         c1 = client.get_collateral_for_storage(addr)
         assert_equal(c1 - c0, storage_limit * COLLATERAL_UNIT_IN_DRIP)
-        self.log.info("contract_addr={}".format(contract_addr))
+        self.log.info(f"contract_addr={contract_addr}")
         assert_equal(client.get_balance(contract_addr), 0)
 
         raw_result = self.call_contract_function_rpc(

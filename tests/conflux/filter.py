@@ -7,9 +7,7 @@ class Filter():
                  offset = None, limit = None, encode_address=True, networkid=DEFAULT_PY_TEST_CHAIN_ID):
         if encode_address and address is not None:
             if isinstance(address, list):
-                base32_address = []
-                for a in address:
-                    base32_address.append(hex_to_b32_address(a, networkid))
+                base32_address = [hex_to_b32_address(a, networkid) for a in address]
             else:
                 base32_address = hex_to_b32_address(address, networkid)
             address = base32_address

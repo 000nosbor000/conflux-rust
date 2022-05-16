@@ -26,8 +26,8 @@ class TestSendTx(RpcClient):
         tx = self.new_tx()
         encoded = eth_utils.encode_hex(rlp.encode(tx))
 
-        assert_raises_rpc_error(None, None, self.send_raw_tx, encoded + "12") # 1 more byte
-        assert_raises_rpc_error(None, None, self.send_raw_tx, encoded[0:-2])  # 1 less byte
+        assert_raises_rpc_error(None, None, self.send_raw_tx, f"{encoded}12")
+        assert_raises_rpc_error(None, None, self.send_raw_tx, encoded[:-2])
 
     def test_address_prefix(self):
         # call builtin address starts with 0x0
@@ -350,7 +350,7 @@ class TestSendTx(RpcClient):
         tx = self.new_tx(nonce=cur_nonce + 1, gas_price=10, epoch_height=0)
         assert_equal(self.send_tx(tx), tx.hash_hex())
         assert_equal(self.txpool_status(), (1, 0))
-        for i in range(51):
+        for _ in range(51):
             self.generate_empty_blocks(2000)
 
         # replace with lower gas price and epoch gap being 2*epoch_height_bound + 1

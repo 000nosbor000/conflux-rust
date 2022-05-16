@@ -162,7 +162,7 @@ class ContractBenchTest(SmartContractBenchBase):
         data = contract.functions.getContract(contract_id).buildTransaction(self.tx_conf)["data"]
         result = self.rpc.call(contractAddr, data)
         result = result[2:]
-        res = ['0x'+result[i * 64 : (i + 1) * 64] for i in range(8)]
+        res = [f'0x{result[i * 64 : (i + 1) * 64]}' for i in range(8)]
         assert_equal(res[0][-20:], self.sender[-20:])
         assert_equal(res[1][-20:], self.sender[-20:])
         assert_equal(int(res[2], 0), cost)
@@ -186,7 +186,7 @@ class ContractBenchTest(SmartContractBenchBase):
         data = contract.functions.getContract(contract_id).buildTransaction(self.tx_conf)["data"]
         result = self.rpc.call(contractAddr, data)
         result = result[2:]
-        res = ['0x'+result[i * 64 : (i + 1) * 64] for i in range(8)]
+        res = [f'0x{result[i * 64 : (i + 1) * 64]}' for i in range(8)]
         assert_equal(res[0][-20:], self.sender[-20:])
         assert_equal(res[1][-20:], self.sender[-20:])
         assert_equal(int(res[2], 0), cost)

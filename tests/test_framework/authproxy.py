@@ -61,17 +61,14 @@ class JSONRPCException(Exception):
 def EncodeDecimal(o):
     if isinstance(o, decimal.Decimal):
         return str(o)
-    raise TypeError(repr(o) + " is not JSON serializable")
+    raise TypeError(f"{repr(o)} is not JSON serializable")
 
 class AuthServiceProxy():
     __id_count = 0
 
     # ensure_ascii: escape unicode as \uXXXX, passed to json.dumps
     def __init__(self, service_url, service_name=None, lock=None, timeout=HTTP_TIMEOUT, connection=None, ensure_ascii=True):
-        if lock is None:
-            self.lock = Lock()
-        else:
-            self.lock = lock
+        self.lock = Lock() if lock is None else lock
         self.__service_url = service_url
         self._service_name = service_name
         self.ensure_ascii = ensure_ascii  # can be toggled on the fly by tests
@@ -93,7 +90,7 @@ class AuthServiceProxy():
             # Python internal stuff
             raise AttributeError
         if self._service_name is not None:
-            name = "%s.%s" % (self._service_name, name)
+            name = f"{self._service_name}.{name}"
         return AuthServiceProxy(self.__service_url, name, lock=self.lock, connection=self.__conn)
 
     def _request(self, method, path, postdata):
@@ -106,12 +103,11 @@ class AuthServiceProxy():
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
         except http.client.BadStatusLine as e:
-            if e.line == "''":  # if connection was closed, try again
-                self.__conn.close()
-                self.__conn.request(method, path, postdata, headers)
-                return self._get_response()
-            else:
+            if e.line != "''":
                 raise
+            self.__conn.close()
+            self.__conn.request(method, path, postdata, headers)
+            return self._get_response()
         except (BrokenPipeError, ConnectionResetError):
             # Python 3.5+ raises BrokenPipeError instead of BadStatusLine when the connection was reset
             # ConnectionResetError happens on FreeBSD with Python 3.4
@@ -122,8 +118,10 @@ class AuthServiceProxy():
     def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
-        log.debug("-%s-> %s %s" % (AuthServiceProxy.__id_count, self._service_name,
-                                   json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+        log.debug(
+            f"-{AuthServiceProxy.__id_count}-> {self._service_name} {json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)}"
+        )
+
         if argsn:
             raise ValueError('json rpc 2 only supports array arguments')
 
@@ -149,7 +147,7 @@ class AuthServiceProxy():
 
     def batch(self, rpc_call_list):
         postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
-        log.debug("--> " + postdata)
+        log.debug(f"--> {postdata}")
         return self._request('POST', self.__url.path, postdata.encode('utf-8'))
 
     def _get_response(self):
@@ -182,4 +180,8 @@ class AuthServiceProxy():
         return response
 
     def __truediv__(self, relative_uri):
-        return AuthServiceProxy("{}/{}".format(self.__service_url, relative_uri), self._service_name, connection=self.__conn)
+        return AuthServiceProxy(
+            f"{self.__service_url}/{relative_uri}",
+            self._service_name,
+            connection=self.__conn,
+        )

@@ -34,7 +34,7 @@ class FixedGenerateTest(ConfluxTestFramework):
         self.log.info("Generate four blocks in another chain for node 1")
 
         connect_nodes(self.nodes, 0, 1)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
 
         assert (self.nodes[0].getblockcount() == 8)
         assert (self.nodes[0].best_block_hash() == besthash1)
@@ -42,7 +42,7 @@ class FixedGenerateTest(ConfluxTestFramework):
 
         blocka = self.nodes[1].generatefixedblock(blocks[0], [], 0, False)
         blockb = self.nodes[1].generatefixedblock(blocks[0], [], 0, False)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
 
         self.log.info("Generate two more blocks on the shorter chain")
         assert (self.nodes[0].getblockcount() == 10)
@@ -53,7 +53,7 @@ class FixedGenerateTest(ConfluxTestFramework):
             blocks1[0], [besthash0], 0, False)
         blockb = self.nodes[1].generatefixedblock(
             blocks1[0], [besthash0], 0, False)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
 
         assert (self.nodes[0].best_block_hash() == besthash0)
         assert (self.nodes[1].best_block_hash() == besthash0)
@@ -61,7 +61,7 @@ class FixedGenerateTest(ConfluxTestFramework):
 
         blocka = self.nodes[1].generatefixedblock(blocks1[0], [], 0, False)
         blockb = self.nodes[1].generatefixedblock(blocks1[0], [], 0, False)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
 
         assert (self.nodes[0].best_block_hash() == besthash1)
         assert (self.nodes[1].best_block_hash() == besthash1)

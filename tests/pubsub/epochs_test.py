@@ -137,7 +137,7 @@ class PubSubTest(ConfluxTestFramework):
 
             self.log.info(f"[{ii}] Pass")
 
-        self.log.info(f"Pass -- forks")
+        self.log.info("Pass -- forks")
 
     async def test_latest_state(self):
         parent = self.nodes[FULLNODE0].best_block_hash()
@@ -195,7 +195,7 @@ class PubSubTest(ConfluxTestFramework):
         hashes = flatten([m["epochHashesOrdered"] for m in msgs])
         assert_equal(hashes, gen[-4:] + gen1[:-4] + gen2[:-4])
 
-        self.log.info(f"Pass -- latest_state")
+        self.log.info("Pass -- latest_state")
 
     def run_test(self):
         assert(SHORT_FORK_LEN < LONG_FORK_LEN)

@@ -68,26 +68,26 @@ class LightSyncTest(ConfluxTestFramework):
 
     def run_test(self):
         # generate blocks and sync
-        self.log.info(f"Generating blocks...")
+        self.log.info("Generating blocks...")
         self.generate_blocks()
 
         self.check_headers_synced()
         self.check_witnesses_synced()
 
-        self.log.info(f"Pass 1 -- keep up")
+        self.log.info("Pass 1 -- keep up")
 
         # crash light node (with db reset)
-        self.log.info(f"Restarting light node with db reset...")
+        self.log.info("Restarting light node with db reset...")
         self.stop_node(LIGHTNODE, clean=True)
         self.start_node(LIGHTNODE, phase_to_wait=None)
 
         self.check_headers_synced()
         self.check_witnesses_synced()
 
-        self.log.info(f"Pass 2 -- catch up")
+        self.log.info("Pass 2 -- catch up")
 
         # crash light node (no db reset)
-        self.log.info(f"Restarting light node without db reset...")
+        self.log.info("Restarting light node without db reset...")
         self.stop_node(LIGHTNODE, clean=False)
         self.start_node(LIGHTNODE, phase_to_wait=None)
 
@@ -97,7 +97,7 @@ class LightSyncTest(ConfluxTestFramework):
         self.check_headers_synced()
         self.check_witnesses_synced()
 
-        self.log.info(f"Pass 3 -- recover from db")
+        self.log.info("Pass 3 -- recover from db")
 
     def check_headers_synced(self):
         sync_blocks(self.nodes)
@@ -139,7 +139,7 @@ class LightSyncTest(ConfluxTestFramework):
         num_events = 0
         num_blamed = 0
 
-        for i in range(0, NORMAL_CHAIN_LENGTH):
+        for i in range(NORMAL_CHAIN_LENGTH):
             if i % (2 * ERA_EPOCH_COUNT) == 0:
                 # Leave some time for PoS to progress, so we can avoid cross-checkpoint reference.
                 time.sleep(1)
@@ -161,33 +161,32 @@ class LightSyncTest(ConfluxTestFramework):
                 hashes.append(tx.hash_hex())
                 num_events += 1
 
-            # ~10% of all blocks are incorrect and blamed
             elif rnd < 0.3:
-                blame_info = {}
-                blame_info['blame'] = "0x1"
-                blame_info['deferredStateRoot'] = "0x1111111111111111111111111111111111111111111111111111111111111111"
+                blame_info = {
+                    'blame': "0x1",
+                    'deferredStateRoot': "0x1111111111111111111111111111111111111111111111111111111111111111",
+                }
+
                 parent_hash = self.nodes[FULLNODE0].test_generateblockwithblameinfo(1, 0, blame_info)
 
                 num_blamed += 1
 
-            # the rest are empty
             else:
                 parent_hash = self.rpc[FULLNODE0].generate_block_with_parent(parent_hash=parent_hash)
 
-            # TODO: generate blamed blocks with txs in them (overlap)
+                # TODO: generate blamed blocks with txs in them (overlap)
 
         # generate a pivot chain section where we might not be able to decide blaming
         # in this section, all headers will have blame=1
         # odd-numbered blocks are incorrect, even-numbered blocks are correct
-        for _ in range(0, BLAMED_SECTION_LENGTH):
-            blame_info = {}
-            blame_info['blame'] = "0x1"
+        for _ in range(BLAMED_SECTION_LENGTH):
+            blame_info = {'blame': "0x1"}
             parent_hash = self.nodes[FULLNODE0].test_generateblockwithblameinfo(1, 0, blame_info)
 
         num_blamed += BLAMED_SECTION_LENGTH // 2
 
         # mine some more blocks to keep blame check offset
-        for _ in range(0, BLAMED_SECTION_LENGTH):
+        for _ in range(BLAMED_SECTION_LENGTH):
             parent_hash = self.rpc[FULLNODE0].generate_custom_block(parent_hash=parent_hash, txs=[], referee=[])
 
         # check if all txs have been executed successfully

@@ -46,16 +46,12 @@ class InvalidBodyNode(DefaultNode):
         self.send_protocol_msg(resp)
 
     def on_get_blocks(self, msg: GetBlocks):
-        blocks = []
-        for h in msg.hashes:
-            blocks.append(self.block_map[h])
+        blocks = [self.block_map[h] for h in msg.hashes]
         resp = Blocks(reqid=msg.reqid, blocks=blocks)
         self.send_protocol_msg(resp)
 
     def on_get_block_headers(self, msg: GetBlockHeaders):
-        blocks = []
-        for h in msg.hashes:
-            blocks.append(self.block_map[h].block_header)
+        blocks = [self.block_map[h].block_header for h in msg.hashes]
         resp = BlockHeaders(reqid=msg.reqid, headers=blocks)
         self.send_protocol_msg(resp)
 
@@ -85,7 +81,7 @@ class InvalidBodySyncTest(ConfluxTestFramework):
         network_thread_start()
         conn1.wait_for_status()
         for (h, b) in conn0.block_map.items():
-            if h != conn0.invalid_block and h != decode_hex(genesis):
+            if h not in [conn0.invalid_block, decode_hex(genesis)]:
                 conn1.send_protocol_msg(NewBlock(block=b))
         wait_for_block_count(self.nodes[1], CHAIN_LEN + 1)
 

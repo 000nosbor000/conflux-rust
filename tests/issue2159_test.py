@@ -46,7 +46,7 @@ class Issue2159Test(ConfluxTestFramework):
         # generate block with many transactions
         parent_hash = self.rpc.block_by_epoch("latest_mined")['hash']
         start_nonce = self.rpc.get_nonce(self.rpc.GENESIS_ADDR)
-        txs = [self.rpc.new_tx(nonce = start_nonce + ii) for ii in range(0, 100)]
+        txs = [self.rpc.new_tx(nonce = start_nonce + ii) for ii in range(100)]
         hash = self.rpc.generate_custom_block(parent_hash = parent_hash, referee = [], txs = txs)
         epoch = self.rpc.block_by_hash(hash)["epochNumber"]
 

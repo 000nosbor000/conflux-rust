@@ -30,7 +30,7 @@ def run_single_test(py, script, test_dir, index, port_min, port_max):
         BLUE = ('\033[0m', '\033[0;34m')
         RED = ('\033[0m', '\033[0;31m')
         GREY = ('\033[0m', '\033[1;30m')
-    print("Running " + script)
+    print(f"Running {script}")
     port_min = port_min + (index * PORT_RANGE) % (port_max - port_min)
     color = BLUE
     glyph = TICK
@@ -41,7 +41,7 @@ def run_single_test(py, script, test_dir, index, port_min, port_max):
         color = RED
         glyph = CROSS
         print(color[1] + glyph + " Testcase " + script + color[0])
-        print("Output of " + script + "\n" + err.output.decode("utf-8"))
+        print(f"Output of {script}" + "\n" + err.output.decode("utf-8"))
         raise err
     print(color[1] + glyph + " Testcase " + script + color[0])
 
@@ -95,10 +95,7 @@ def run():
     executor = ProcessPoolExecutor(max_workers=options.max_workers)
     test_results = []
 
-    py = "python3"
-    if hasattr(sys, "getwindowsversion"):
-        py = "python"
-
+    py = "python" if hasattr(sys, "getwindowsversion") else "python3"
     i = 0
     # Start slow tests first to avoid waiting for long-tail jobs
     for script in slow_tests:
@@ -117,7 +114,7 @@ def run():
         except subprocess.CalledProcessError as err:
             failed.add(script)
 
-    if len(failed) > 0:
+    if failed:
         print("The following test fails: ")
         for c in failed:
             print(c)

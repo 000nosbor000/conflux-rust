@@ -42,8 +42,8 @@ class GHASTTest(ConfluxTestFramework):
         self.log.info("Sync two nodes")
         connect_nodes(self.nodes, 0, 1)
         wait_until(lambda: self.nodes[1].getblockcount() >= 3, timeout = 10)
-        self.log.info("Node0 block count " + str(self.nodes[0].getblockcount()))
-        self.log.info("Node1 block count " + str(self.nodes[1].getblockcount()))
+        self.log.info(f"Node0 block count {str(self.nodes[0].getblockcount())}")
+        self.log.info(f"Node1 block count {str(self.nodes[1].getblockcount())}")
 
         self.log.info("Generating a block without referencing partial invalid blocks")
 
@@ -57,24 +57,21 @@ class GHASTTest(ConfluxTestFramework):
         wait_until(lambda: self.nodes[0].getblockcount() >= 6, timeout = 40)
         wait_until(lambda: self.nodes[1].getblockcount() >= 4, timeout = 40)
 
-        timer_cnt = 0
         diff = int(block_b1['difficulty'], 16)
         pow_qual = int(block_b1['powQuality'], 16)
-        if diff * TIMER_RATIO <= pow_qual:
-            timer_cnt = 1
-
-        self.log.info("Start timer tick " + str(timer_cnt))
+        timer_cnt = 1 if diff * TIMER_RATIO <= pow_qual else 0
+        self.log.info(f"Start timer tick {timer_cnt}")
 
         while timer_cnt < TIMER_BETA:
             a = client0.generate_block()
-            self.log.info("Generated a block " + a)
+            self.log.info(f"Generated a block {a}")
             block_a = client0.block_by_hash(a)
             assert(len(block_a['refereeHashes']) == 0)
             diff = int(block_a['difficulty'], 16)
             pow_qual = int(block_a['powQuality'], 16)
             if diff * TIMER_RATIO <= pow_qual:
                 timer_cnt += 1
-                self.log.info("Timer increased to " + str(timer_cnt))
+                self.log.info(f"Timer increased to {timer_cnt}")
 
         self.log.info("Sync two nodes")
         connect_nodes(self.nodes, 0, 1)
