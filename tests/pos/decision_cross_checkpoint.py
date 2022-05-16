@@ -18,7 +18,10 @@ from test_framework.util import *
 class PosDecisionCrossCheckpoint(DefaultConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.conf_parameters["vrf_proposal_threshold"] = '"{}"'.format(int_to_hex(int(2 ** 256 - 1)))
+        self.conf_parameters[
+            "vrf_proposal_threshold"
+        ] = f'"{int_to_hex(int(2 ** 256 - 1))}"'
+
         self.conf_parameters["pos_pivot_decision_defer_epoch_count"] = '120'
         self.conf_parameters["timer_chain_block_difficulty_ratio"] = "3"
         self.conf_parameters["timer_chain_beta"] = "20"
@@ -29,10 +32,7 @@ class PosDecisionCrossCheckpoint(DefaultConfluxTestFramework):
         self.pos_parameters["round_time_ms"] = 1000000000
 
     def run_test(self):
-        clients = []
-        for node in self.nodes:
-            clients.append(RpcClient(node))
-
+        clients = [RpcClient(node) for node in self.nodes]
         # Initialize pos_consensus_blocks
         for _ in range(4):
             for client in clients:
@@ -55,7 +55,7 @@ class PosDecisionCrossCheckpoint(DefaultConfluxTestFramework):
             client.pos_force_sign_pivot_decision(chosen_decision, int_to_hex(pivot_decision_height))
         time.sleep(1)
 
-        for i in range(4):
+        for _ in range(4):
             for client in clients:
                 client.pos_proposal_timeout()
             # Wait for proposal processing

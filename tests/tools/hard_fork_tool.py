@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """An example functional test
 """
+
 import eth_utils
 import os
 import sys
@@ -51,12 +52,21 @@ for i in range(start_block_number, end_block_number + 1, 1000):
             assert pos_identifier in pub_keys_map
             voting_power_map[pos_identifier] += parse_as_int(log["data"])
 with open(os.path.join(cwd, "public_keys"), "w") as f:
-    for pos_identifier in pub_keys_map.keys():
+    for pos_identifier in pub_keys_map:
         f.write(",".join([pub_keys_map[pos_identifier][0][2:], pub_keys_map[pos_identifier][1][2:], str(voting_power_map[pos_identifier])]) + "\n")
 cfx_block_hash = client.block_by_block_number(hex(end_block_number))["hash"]
 initial_seed = encode_hex(keccak(hexstr=cfx_block_hash[2:]+bitcoin_block_hash))
 tg_config_gen = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../target/release/pos-genesis-tool")
-check_output([tg_config_gen, "frompub", "--initial-seed={}".format(initial_seed),"public_keys"], cwd=cwd)
+check_output(
+    [
+        tg_config_gen,
+        "frompub",
+        f"--initial-seed={initial_seed}",
+        "public_keys",
+    ],
+    cwd=cwd,
+)
+
 waypoint = open(os.path.join(cwd, "waypoint_config"), "r").readlines()[0]
 conf_file = open(os.path.join(cwd, "pos_config.yaml"), "w")
 conf_file.write(f"""

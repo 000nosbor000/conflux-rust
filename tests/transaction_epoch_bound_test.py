@@ -43,9 +43,6 @@ class TransactionTest(DefaultConfluxTestFramework):
             assert(False)
         except ReceivedErrorResponseError:
             self.log.info("Bad transaction rejected.")
-        except:
-            self.log.info("Unexpected error!")
-            assert(False)
         assert(client.get_balance(eth_utils.encode_hex(receiver_addr)) == value)
 
         epoch_height = parse_as_int(client.block_by_hash(client.best_block_hash())['height'])
@@ -53,7 +50,10 @@ class TransactionTest(DefaultConfluxTestFramework):
         client.send_tx(tx)
         block_gen_thread = BlockGenThread(self.nodes, self.log, interval_base=0.1)
         block_gen_thread.start()
-        self.log.info("Wait for the first transaction to go through with epoch_height = " + str(epoch_height) + "...")
+        self.log.info(
+            f"Wait for the first transaction to go through with epoch_height = {str(epoch_height)}..."
+        )
+
         wait_until(lambda: client.get_balance(eth_utils.encode_hex(receiver_addr)) == 2 * value)
         block_gen_thread.stop()
         self.log.info("Now block count:%d", self.nodes[0].getblockcount())

@@ -144,10 +144,7 @@ class NewBlockHashes(rlp.Serializable):
 
     @classmethod
     def serializable(cls, obj):
-        if is_sequence(obj.block_hashes):
-            return True
-        else:
-            return False
+        return bool(is_sequence(obj.block_hashes))
 
     @classmethod
     def serialize(cls, obj):
@@ -165,10 +162,7 @@ class Transactions:
 
     @classmethod
     def serializable(cls, obj):
-        if is_sequence(obj.transactions):
-            return True
-        else:
-            return False
+        return bool(is_sequence(obj.transactions))
 
     @classmethod
     def serialize(cls, obj):
@@ -280,16 +274,14 @@ class BlockHeader(rlp.Serializable):
     def pow_decimal(self):
         init_buf = bytearray(64);
         problem_hash = self.problem_hash()
-        for i in range(0, 32):
+        for i in range(32):
             init_buf[i] = problem_hash[i]
         n = self.nonce
         for i in range(32, 64):
             init_buf[i] = n % 256
             n = int(n / 256)
         tmp = sha3(bytes(init_buf))
-        buf = []
-        for i in range(0, 32):
-            buf.append(tmp[i] ^ self.problem_hash()[i])
+        buf = [tmp[i] ^ self.problem_hash()[i] for i in range(32)]
         return bytes_to_int(sha3(bytes(buf)))
 
     def without_nonce(self):
@@ -302,9 +294,8 @@ class BlockHeader(rlp.Serializable):
 
 
 class BlockHeaderRlpPart(rlp.Serializable):
-    fields = [
-        (field, sedes) for field, sedes in BlockHeader._meta.fields
-    ]
+    fields = list(BlockHeader._meta.fields)
+
 
 
 class BlockHeaderWithoutNonce(rlp.Serializable):
@@ -315,10 +306,6 @@ class BlockHeaderWithoutNonce(rlp.Serializable):
     ]
 
 
-# class BlockHeaders(CountableList(BlockHeader)):
-#     fields = [
-#         ("headers", CountableList(BlockHeader))
-#     ]
 class BlockHeaders(rlp.Serializable):
     fields = [
         ("reqid", big_endian_int),
@@ -491,25 +478,17 @@ msg_id_dict = {
     GetBlockHashesByEpoch: GET_BLOCK_HASHES_BY_EPOCH,
 }
 
-msg_class_dict = {}
-for c in msg_id_dict:
-    msg_class_dict[msg_id_dict[c]] = c
+msg_class_dict = {msg_id_dict[c]: c for c in msg_id_dict}
 
 
 def get_msg_id(msg):
     c = msg.__class__
-    if c in msg_id_dict:
-        return msg_id_dict[c]
-    else:
-        return None
+    return msg_id_dict[c] if c in msg_id_dict else None
 
 
 def get_msg_class(msg):
-    if msg in msg_class_dict:
-        return msg_class_dict[msg]
-    else:
-        return None
+    return msg_class_dict[msg] if msg in msg_class_dict else None
 
 
 def is_sequence(s):
-    return isinstance(s, list) or isinstance(s, tuple)
+    return isinstance(s, (list, tuple))

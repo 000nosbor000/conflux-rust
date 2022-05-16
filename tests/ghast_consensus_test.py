@@ -53,9 +53,9 @@ test_input_dir = os.path.join(test_dir, "./ghast_cases/")
 
 failed = set()
 for inp in TEST_INPUT:
-    os.system("rm -rf " + test_dir + "/__consensus*")
-    os.system("rm -rf " + test_dir + "/sqlite_db")
-    print("Run Sub-testcase: " + inp)
+    os.system(f"rm -rf {test_dir}/__consensus*")
+    os.system(f"rm -rf {test_dir}/sqlite_db")
+    print(f"Run Sub-testcase: {inp}")
     color = BLUE
     glyph = TICK
     try:
@@ -63,14 +63,14 @@ for inp in TEST_INPUT:
     except subprocess.CalledProcessError as err:
         color = RED
         glyph = CROSS
-        print("Output of " + inp)
+        print(f"Output of {inp}")
         print(err.output.decode("utf-8"))
         failed.add(inp)
     print(color[1] + glyph + " Sub-testcase " + inp + color[0])
 
-os.system("rm -rf " + test_dir + "/__consensus*")
+os.system(f"rm -rf {test_dir}/__consensus*")
 
-if len(failed) > 0:
+if failed:
     print("The following sub-test cases fail: ")
     for c in failed:
         print(c)

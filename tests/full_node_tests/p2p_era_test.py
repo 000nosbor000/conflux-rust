@@ -34,8 +34,8 @@ class P2PTest(ConfluxTestFramework):
         self.stop_probability = 0.01
         self.clean_probability = 0.5
 
-        self.all_nodes = list(range(0, self.num_nodes))
-        self.archive_nodes = list(range(0, self.num_nodes // 2))
+        self.all_nodes = list(range(self.num_nodes))
+        self.archive_nodes = list(range(self.num_nodes // 2))
         self.full_nodes = list(range(self.num_nodes // 2, self.num_nodes))
 
     def setup_nodes(self):

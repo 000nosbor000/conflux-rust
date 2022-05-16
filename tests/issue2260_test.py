@@ -66,7 +66,10 @@ class Issue2260(ConfluxTestFramework):
         block_a = self.rpc.generate_custom_block(parent_hash = block_0, referee = [], txs = [])
         block_b = self.rpc.generate_custom_block(parent_hash = block_a, referee = [], txs = [])
         block_c = self.rpc.generate_custom_block(parent_hash = block_b, referee = [], txs = [])
-        block_d = self.rpc.generate_custom_block(parent_hash = block_a, referee = [], txs = txs[0:2])
+        block_d = self.rpc.generate_custom_block(
+            parent_hash=block_a, referee=[], txs=txs[:2]
+        )
+
         block_e = self.rpc.generate_custom_block(parent_hash = block_c, referee = [block_d], txs = txs[2:4])
 
         # make sure transactions have been executed

@@ -63,7 +63,7 @@ class Issue1303Test(ConfluxTestFramework):
         assert(r0 != None)
 
         r1 = self.rpc.get_transaction_receipt(tx1.hash_hex())
-        assert(r1 == None) # fails before #1303
+        assert r1 is None
 
         # connect forks, tx should be re-executed
         tip = self.rpc.generate_block_with_parent(tip1, referee = [tip0])
@@ -82,7 +82,7 @@ class Issue1303Test(ConfluxTestFramework):
         assert(r1 != None)
         assert(int(r1["epochNumber"], 16) > r1_original_epoch)
 
-        self.log.info(f"Pass")
+        self.log.info("Pass")
 
     def generate_chain(self, parent, len):
         hashes = [parent]

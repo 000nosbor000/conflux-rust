@@ -11,7 +11,7 @@ class ReorgTest(ConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 8
         self.n_shard = 2
-        self.shard_size = int(self.num_nodes / self.n_shard)
+        self.shard_size = self.num_nodes // self.n_shard
 
     def setup_network(self):
         self.setup_nodes()
@@ -127,10 +127,9 @@ class ReorgTest(ConfluxTestFramework):
             return False
         if balance == balance_map[k]:
             return True
-        else:
-            self.log.info("Remote balance:%d, local balance:%d", balance, balance_map[k])
-            time.sleep(1)
-            return False
+        self.log.info("Remote balance:%d, local balance:%d", balance, balance_map[k])
+        time.sleep(1)
+        return False
 
 
 if __name__ == "__main__":

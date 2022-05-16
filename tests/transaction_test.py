@@ -54,7 +54,7 @@ class TransactionTest(DefaultConfluxTestFramework):
         all_txs = []
         tx_n = 1000
         self.log.info("start to generate %d transactions with about %d seconds", tx_n, tx_n/100/2)
-        for i in range(tx_n):
+        for _ in range(tx_n):
             sender_key = random.choice(list(balance_map))
             nonce = nonce_map[sender_key]
             data = b''
@@ -83,10 +83,12 @@ class TransactionTest(DefaultConfluxTestFramework):
             self.nodes[r].p2p.send_protocol_msg(Transactions(transactions=[tx]))
             all_txs.append(tx)
             nonce_map[sender_key] = nonce + 1
-            if is_payment:
-                balance_map[sender_key] -= value + gas_price * gas
-            else:
-                balance_map[sender_key] -= value + gas_price * charged_of_huge_gas(gas)
+            balance_map[sender_key] -= (
+                value + gas_price * gas
+                if is_payment
+                else value + gas_price * charged_of_huge_gas(gas)
+            )
+
             self.log.debug("Send Transaction %s to node %d", encode_hex(tx.hash), r)
             time.sleep(random.random() / 100)
         for k in balance_map:
@@ -106,7 +108,7 @@ class TransactionTest(DefaultConfluxTestFramework):
                 except AssertionError as _:
                     self.nodes[0].p2p.send_protocol_msg(Transactions(transactions=[tx]))
                 if i == 2:
-                    raise AssertionError("Tx {} not confirmed after 30 seconds".format(tx.hash_hex()))
+                    raise AssertionError(f"Tx {tx.hash_hex()} not confirmed after 30 seconds")
 
         for k in balance_map:
             self.log.info("Check account sk:%s addr:%s", bytes_to_int(k), eth_utils.encode_hex(priv_to_addr(k)))
@@ -128,10 +130,9 @@ class TransactionTest(DefaultConfluxTestFramework):
             return False
         if balance + staking_balance + collateral_for_storage == balance_map[k]:
             return True
-        else:
-            self.log.info("Remote balance:%d, local balance:%d", balance + staking_balance + collateral_for_storage, balance_map[k])
-            time.sleep(1)
-            return False
+        self.log.info("Remote balance:%d, local balance:%d", balance + staking_balance + collateral_for_storage, balance_map[k])
+        time.sleep(1)
+        return False
 
 
 if __name__ == "__main__":

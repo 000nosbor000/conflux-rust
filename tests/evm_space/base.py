@@ -90,8 +90,7 @@ class Web3Base(ConfluxTestFramework):
         self.rpc.generate_blocks(20, 1)
         receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         assert_equal(receipt["status"], 1)
-        addr = receipt["contractAddress"]
-        return addr
+        return receipt["contractAddress"]
 
     def run_test(self):
         self.cfxPrivkey = default_config['GENESIS_PRI_KEY']

@@ -19,16 +19,12 @@ def state_root(
 
 
 def precompute_epoch_receipt_root_by_number_of_blocks():
-    receipt_root_by_number_of_blocks = []
-
     # 1 block is a special case for the Receipt Root MPT.
     path_bytes = bytearray()
     path_bytes.extend([128 + 64 + 1, 0])
     epoch_receipt_root_one_block_path_merkle = utils.sha3(
         bytes(path_bytes) + EMPTY_BLOCK_RECEIPT_ROOT)
-    receipt_root_by_number_of_blocks.append(
-        epoch_receipt_root_one_block_path_merkle
-    )
+    receipt_root_by_number_of_blocks = [epoch_receipt_root_one_block_path_merkle]
     for number_of_blocks in range(2, 16):
         epoch_receipt_root = utils.sha3(
             b'n' + EMPTY_BLOCK_RECEIPT_ROOT * number_of_blocks \

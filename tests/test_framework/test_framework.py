@@ -112,10 +112,11 @@ class ConfluxTestFramework:
             "--cachedir",
             dest="cachedir",
             default=os.path.abspath(
-                os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
-            help=
-            "Directory for caching pregenerated datadirs (default: %(default)s)"
+                f"{os.path.dirname(os.path.realpath(__file__))}/../../cache"
+            ),
+            help="Directory for caching pregenerated datadirs (default: %(default)s)",
         )
+
         parser.add_argument(
             "--tmpdir", dest="tmpdir", help="Root directory for datadirs")
         parser.add_argument(
@@ -197,7 +198,7 @@ class ConfluxTestFramework:
             self.options.tmpdir = os.getenv(
                 "CONFLUX_TESTS_LOG_DIR",
                 default=tempfile.mkdtemp(prefix="conflux_test_"))
-        
+
         self._start_logging()
 
         success = TestStatus.FAILED
@@ -216,7 +217,7 @@ class ConfluxTestFramework:
         except JSONRPCException as e:
             self.log.exception("JSONRPC error")
         except SkipTest as e:
-            self.log.warning("Test Skipped: %s" % e.message)
+            self.log.warning(f"Test Skipped: {e.message}")
             success = TestStatus.SKIPPED
         except AssertionError as e:
             self.log.exception("Assertion failed")
@@ -244,10 +245,10 @@ class ConfluxTestFramework:
                 "Note: bitcoinds were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
-            self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
+            self.log.info(f"Cleaning up {self.options.tmpdir} on exit")
             cleanup_tree_on_exit = True
         else:
-            self.log.warning("Not cleaning up dir %s" % self.options.tmpdir)
+            self.log.warning(f"Not cleaning up dir {self.options.tmpdir}")
             cleanup_tree_on_exit = False
 
         if success == TestStatus.PASSED:
@@ -290,7 +291,7 @@ class ConfluxTestFramework:
 
     def setup_chain(self):
         """Override this method to customize blockchain setup"""
-        self.log.info("Initializing test directory " + self.options.tmpdir)
+        self.log.info(f"Initializing test directory {self.options.tmpdir}")
         self._initialize_chain_clean()
 
     def setup_network(self):
@@ -372,7 +373,7 @@ class ConfluxTestFramework:
         """Start multiple bitcoinds"""
 
         try:
-            for i, node in enumerate(self.nodes):
+            for node in self.nodes:
                 node.start(extra_args, *args, **kwargs)
             for node in self.nodes:
                 node.wait_for_rpc_connection()
@@ -406,7 +407,7 @@ class ConfluxTestFramework:
     def maybe_restart_node(self, i, stop_probability, clean_probability, wait_time=300):
         if random.random() <= stop_probability:
             self.log.info("stop %s", i)
-            clean_data = True if random.random() <= clean_probability else False
+            clean_data = random.random() <= clean_probability
             self.stop_node(i, clean=clean_data)
             self.start_node(i, wait_time=wait_time, phase_to_wait=("NormalSyncPhase"))
 
@@ -418,7 +419,9 @@ class ConfluxTestFramework:
         self.log.setLevel(logging.DEBUG)
         # Create file handler to log all messages
         fh = logging.FileHandler(
-            self.options.tmpdir + '/test_framework.log', encoding='utf-8')
+            f'{self.options.tmpdir}/test_framework.log', encoding='utf-8'
+        )
+
         fh.setLevel(logging.DEBUG)
         # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
         ch = logging.StreamHandler(sys.stdout)
@@ -470,14 +473,14 @@ class ConfluxTestFramework:
                 except AssertionError as _:
                     self.nodes[0].p2p.send_protocol_msg(Transactions(transactions=[tx]))
                 if i == 2:
-                    raise AssertionError("Tx {} not confirmed after 30 seconds".format(tx.hash_hex()))
+                    raise AssertionError(f"Tx {tx.hash_hex()} not confirmed after 30 seconds")
         # After having optimistic execution, get_receipts may get receipts with not deferred block, these extra blocks
         # ensure that later get_balance can get correct executed balance for all transactions
         client = RpcClient(self.nodes[0])
         for _ in range(5):
             client.generate_block()
         receipts = [client.get_transaction_receipt(tx.hash_hex()) for tx in all_txs]
-        self.log.debug("Receipts received: {}".format(receipts))
+        self.log.debug(f"Receipts received: {receipts}")
         if check_status:
             for i in receipts:
                 assert_equal(int(i["outcomeStatus"], 0), 0)
@@ -504,15 +507,14 @@ class DefaultConfluxTestFramework(ConfluxTestFramework):
         start_p2p_connection(self.nodes)
 
 class OptionHelper:
-    def to_argument_str(arg_name):
-        return "--" + str(arg_name).replace("_", "-")
+    def to_argument_str(self):
+        return "--" + str(self).replace("_", "-")
 
-    def parsed_options_to_args(parsed_arg: dict):
+    def parsed_options_to_args(self):
         args = []
-        for arg_name, value in parsed_arg.items():
+        for arg_name, value in self.items():
             if type(value) is not bool:
-                args.append(OptionHelper.to_argument_str(arg_name))
-                args.append(str(value))
+                args.extend((OptionHelper.to_argument_str(arg_name), str(value)))
             elif value:
                 # FIXME: This only allows setting boolean to True.
                 args.append(OptionHelper.to_argument_str(arg_name))
@@ -528,39 +530,41 @@ class OptionHelper:
     arg_filter, A class may use a subset of arg_definition of another 
     class, without changing default value.
     """
-    def add_options(
-            parser: argparse.ArgumentParser,
-            arg_definition: dict,
-            arg_filter: Union[None, set, dict] = None):
+    def add_options(self, arg_definition: dict, arg_filter: Union[None, set, dict] = None):
         for arg_name, default_value in arg_definition.items():
             if arg_filter is None or arg_name in arg_filter:
                 try:
                     if default_value is None:
-                        parser.add_argument(
+                        self.add_argument(
                             OptionHelper.to_argument_str(arg_name),
                             dest=arg_name,
                             default=SUPPRESS,
-                            type=str
+                            type=str,
                         )
+
                     elif type(default_value) is bool:
-                        parser.add_argument(
+                        self.add_argument(
                             OptionHelper.to_argument_str(arg_name),
                             dest=arg_name,
-                            action= 'store_false' if default_value else 'store_true',
+                            action='store_false'
+                            if default_value
+                            else 'store_true',
                         )
+
                     else:
-                        parser.add_argument(
+                        self.add_argument(
                             OptionHelper.to_argument_str(arg_name),
                             dest=arg_name,
                             default=default_value,
-                            type=type(default_value)
+                            type=type(default_value),
                         )
+
                 except argparse.ArgumentError as e:
                     print(f"Ignored argparse error: {e}")
 
-    def conflux_options_to_config(parsed_args: dict, arg_filter: Union[None, set, dict] = None) -> dict:
+    def conflux_options_to_config(self, arg_filter: Union[None, set, dict] = None) -> dict:
         conflux_config = {}
-        for arg_name, value in parsed_args.items():
+        for arg_name, value in self.items():
             if arg_filter is None or arg_name in arg_filter:
                 if type(value) is bool:
                     conflux_config[arg_name] = "true" if value else "false"

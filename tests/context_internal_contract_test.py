@@ -66,7 +66,10 @@ class ContextInternalContractTest(ConfluxTestFramework):
             self.rpc.new_contract_tx(receiver=contractAddr, data_hex=encode_hex_0x(keccak(b"getEpochNumber()")), nonce = start_nonce + 7, sender=sender, priv_key=priv_key),
         ]
 
-        block_a = self.rpc.generate_custom_block(parent_hash = block_p, referee = [], txs = txs[0:2])
+        block_a = self.rpc.generate_custom_block(
+            parent_hash=block_p, referee=[], txs=txs[:2]
+        )
+
         block_c = self.rpc.generate_custom_block(parent_hash = block_a, referee = [], txs = txs[2:4])
         block_b = self.rpc.generate_custom_block(parent_hash = block_p, referee = [], txs = txs[4:6])
         block_d = self.rpc.generate_custom_block(parent_hash = block_c, referee = [block_b], txs = txs[6:8])

@@ -124,14 +124,14 @@ class LightRPCTest(ConfluxTestFramework):
         self.nodes[FULLNODE1].wait_for_phase(["NormalSyncPhase"])
 
         # generate some blocks in advance
-        self.log.info(f"Generating blocks...")
+        self.log.info("Generating blocks...")
         self.rpc[FULLNODE0].generate_blocks(NUM_BLOCKS)
 
         # generate some transactions from the genesis address
-        self.log.info(f"Generating transactions...")
+        self.log.info("Generating transactions...")
 
         # send some txs to increase the nonce
-        for nonce in range(0, NUM_TXS):
+        for nonce in range(NUM_TXS):
             receiver = self.rpc[FULLNODE0].rand_addr()
             tx = self.rpc[FULLNODE0].new_tx(receiver=receiver, nonce=nonce)
             self.rpc[FULLNODE0].send_tx(tx, wait_for_receipt=True)
@@ -161,15 +161,15 @@ class LightRPCTest(ConfluxTestFramework):
         self.GENESIS_HASH = self.nodes[FULLNODE0].cfx_getBlocksByEpoch("earliest")[-1]
 
     def test_local_methods(self):
-        self.log.info(f"Checking cfx_getBestBlockHash...")
+        self.log.info("Checking cfx_getBestBlockHash...")
         full = self.nodes[FULLNODE0].cfx_getBestBlockHash()
         light = self.nodes[LIGHTNODE].cfx_getBestBlockHash()
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getBestBlockHash")
+        self.log.info("Pass -- cfx_getBestBlockHash")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getBlocksByEpoch...")
+        self.log.info("Checking cfx_getBlocksByEpoch...")
 
         full = self.nodes[FULLNODE0].cfx_getBlocksByEpoch("earliest")
         light = self.nodes[LIGHTNODE].cfx_getBlocksByEpoch("earliest")
@@ -179,11 +179,11 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.nodes[LIGHTNODE].cfx_getBlocksByEpoch("latest_checkpoint")
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getBlocksByEpoch")
+        self.log.info("Pass -- cfx_getBlocksByEpoch")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getConfirmationRiskByHash...")
+        self.log.info("Checking cfx_getConfirmationRiskByHash...")
 
         best = self.nodes[FULLNODE0].cfx_getBestBlockHash()
         full = self.nodes[FULLNODE0].cfx_getConfirmationRiskByHash(best)
@@ -195,19 +195,19 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.nodes[LIGHTNODE].cfx_getConfirmationRiskByHash(checkpoint)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getConfirmationRiskByHash")
+        self.log.info("Pass -- cfx_getConfirmationRiskByHash")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_clientVersion...")
+        self.log.info("Checking cfx_clientVersion...")
         full = self.nodes[FULLNODE0].cfx_clientVersion()
         light = self.nodes[LIGHTNODE].cfx_clientVersion()
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_clientVersion")
+        self.log.info("Pass -- cfx_clientVersion")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_epochNumber...")
+        self.log.info("Checking cfx_epochNumber...")
 
         light = self.rpc[LIGHTNODE].epoch_number("earliest")
         assert_equal(light, 0)
@@ -230,11 +230,11 @@ class LightRPCTest(ConfluxTestFramework):
 
         assert_raises_rpc_error(None, None, self.rpc[LIGHTNODE].epoch_number, hex(full + BLAME_CHECK_OFFSET))
 
-        self.log.info(f"Pass -- cfx_epochNumber")
+        self.log.info("Pass -- cfx_epochNumber")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getStatus...")
+        self.log.info("Checking cfx_getStatus...")
         full = self.nodes[FULLNODE0].cfx_getStatus()
         light = self.nodes[LIGHTNODE].cfx_getStatus()
 
@@ -243,22 +243,22 @@ class LightRPCTest(ConfluxTestFramework):
         del light['latestState']
 
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getStatus")
+        self.log.info("Pass -- cfx_getStatus")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getSkippedBlocksByEpoch...")
+        self.log.info("Checking cfx_getSkippedBlocksByEpoch...")
         full = self.nodes[FULLNODE0].cfx_getSkippedBlocksByEpoch("latest_checkpoint")
         light = self.nodes[LIGHTNODE].cfx_getSkippedBlocksByEpoch("latest_checkpoint")
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getSkippedBlocksByEpoch")
+        self.log.info("Pass -- cfx_getSkippedBlocksByEpoch")
 
     def test_state_methods(self):
         latest_state = self.nodes[LIGHTNODE].cfx_epochNumber("latest_state")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getAccount...")
+        self.log.info("Checking cfx_getAccount...")
 
         full = self.rpc[FULLNODE0].get_account(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_account(self.user, latest_state)
@@ -268,37 +268,37 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.rpc[LIGHTNODE].get_account(self.contract, latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getAccount")
+        self.log.info("Pass -- cfx_getAccount")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getAccumulateInterestRate...")
+        self.log.info("Checking cfx_getAccumulateInterestRate...")
 
         full = self.rpc[FULLNODE0].get_accumulate_interest_rate(latest_state)
         light = self.rpc[LIGHTNODE].get_accumulate_interest_rate(latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getAccumulateInterestRate")
+        self.log.info("Pass -- cfx_getAccumulateInterestRate")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getAdmin...")
+        self.log.info("Checking cfx_getAdmin...")
         full = self.rpc[FULLNODE0].get_admin(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_admin(self.user, latest_state)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getAdmin")
+        self.log.info("Pass -- cfx_getAdmin")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getBalance...")
+        self.log.info("Checking cfx_getBalance...")
         full = self.rpc[FULLNODE0].get_balance(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_balance(self.user, latest_state)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getBalance")
+        self.log.info("Pass -- cfx_getBalance")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getCode...")
+        self.log.info("Checking cfx_getCode...")
 
         full = self.rpc[FULLNODE0].get_code(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_code(self.user, latest_state)
@@ -308,53 +308,53 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.rpc[LIGHTNODE].get_code(self.contract, latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getCode")
+        self.log.info("Pass -- cfx_getCode")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getCollateralForStorage...")
+        self.log.info("Checking cfx_getCollateralForStorage...")
         full = self.rpc[FULLNODE0].get_collateral_for_storage(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_collateral_for_storage(self.user, latest_state)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getCollateralForStorage")
+        self.log.info("Pass -- cfx_getCollateralForStorage")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getInterestRate...")
+        self.log.info("Checking cfx_getInterestRate...")
 
         full = self.rpc[FULLNODE0].get_interest_rate(latest_state)
         light = self.rpc[LIGHTNODE].get_interest_rate(latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getInterestRate")
+        self.log.info("Pass -- cfx_getInterestRate")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getNextNonce...")
+        self.log.info("Checking cfx_getNextNonce...")
         full = self.rpc[FULLNODE0].get_nonce(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_nonce(self.user, latest_state)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getNextNonce")
+        self.log.info("Pass -- cfx_getNextNonce")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getSponsorInfo...")
+        self.log.info("Checking cfx_getSponsorInfo...")
         full = self.rpc[FULLNODE0].get_sponsor_info(self.contract, latest_state)
         light = self.rpc[LIGHTNODE].get_sponsor_info(self.contract, latest_state)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getSponsorInfo")
+        self.log.info("Pass -- cfx_getSponsorInfo")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getStakingBalance...")
+        self.log.info("Checking cfx_getStakingBalance...")
         full = self.rpc[FULLNODE0].get_staking_balance(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_staking_balance(self.user, latest_state)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getStakingBalance")
+        self.log.info("Pass -- cfx_getStakingBalance")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getStorageAt...")
+        self.log.info("Checking cfx_getStorageAt...")
 
         full = self.rpc[FULLNODE0].get_storage_at(self.user, "0x0000000000000000000000000000000000000000000000000000000000000000", latest_state)
         light = self.rpc[LIGHTNODE].get_storage_at(self.user, "0x0000000000000000000000000000000000000000000000000000000000000000", latest_state)
@@ -364,11 +364,11 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.rpc[LIGHTNODE].get_storage_at(self.contract, "0x0000000000000000000000000000000000000000000000000000000000000000", latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getStorageAt")
+        self.log.info("Pass -- cfx_getStorageAt")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getStorageRoot...")
+        self.log.info("Checking cfx_getStorageRoot...")
 
         full = self.rpc[FULLNODE0].get_storage_root(self.user, latest_state)
         light = self.rpc[LIGHTNODE].get_storage_root(self.user, latest_state)
@@ -378,11 +378,11 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.rpc[LIGHTNODE].get_storage_root(self.contract, latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getStorageRoot")
+        self.log.info("Pass -- cfx_getStorageRoot")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getDepositList & cfx_getVoteList")
+        self.log.info("Checking cfx_getDepositList & cfx_getVoteList")
         full = self.rpc[FULLNODE0].get_deposit_list(self.stake_addr, latest_state)
         light = self.rpc[LIGHTNODE].get_deposit_list(self.stake_addr, latest_state)
         assert_equal(light, full)
@@ -391,17 +391,17 @@ class LightRPCTest(ConfluxTestFramework):
         light = self.rpc[LIGHTNODE].get_vote_list(self.stake_addr, latest_state)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_getDepositList & cfx_getVoteList")
+        self.log.info("Pass -- cfx_getDepositList & cfx_getVoteList")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_checkBalanceAgainstTransaction")
+        self.log.info("Checking cfx_checkBalanceAgainstTransaction")
 
         full = self.rpc[FULLNODE0].check_balance_against_transaction(account_addr=self.sponsored_address, contract_addr=self.contract, gas_limit=1, gas_price=1, storage_limit=1)
         light = self.rpc[LIGHTNODE].check_balance_against_transaction(account_addr=self.sponsored_address, contract_addr=self.contract, gas_limit=1, gas_price=1, storage_limit=1)
         assert_equal(light, full)
 
-        self.log.info(f"Pass -- cfx_checkBalanceAgainstTransaction")
+        self.log.info("Pass -- cfx_checkBalanceAgainstTransaction")
 
     def assert_blocks_equal(self, light_block, block):
         # light nodes do not retrieve receipts for block queries
@@ -420,7 +420,7 @@ class LightRPCTest(ConfluxTestFramework):
         assert_equal(light_block, block)
 
     def test_block_methods(self):
-        self.log.info(f"Generating blocks with transactions...")
+        self.log.info("Generating blocks with transactions...")
 
         address = self.rpc[FULLNODE0].GENESIS_ADDR
         nonce = self.rpc[FULLNODE0].get_nonce(address)
@@ -446,7 +446,7 @@ class LightRPCTest(ConfluxTestFramework):
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_gasPrice...")
+        self.log.info("Checking cfx_gasPrice...")
 
         light = self.rpc[LIGHTNODE].gas_price()
 
@@ -454,11 +454,11 @@ class LightRPCTest(ConfluxTestFramework):
         # NOTE: full node samples more blocks so the result might be different
         assert_equal(light, 1)
 
-        self.log.info(f"Pass -- cfx_gasPrice")
+        self.log.info("Pass -- cfx_gasPrice")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getBlockByHash...")
+        self.log.info("Checking cfx_getBlockByHash...")
 
         block = self.rpc[FULLNODE0].block_by_hash(self.GENESIS_HASH, True)
         light_block = self.rpc[LIGHTNODE].block_by_hash(self.GENESIS_HASH, True)
@@ -475,11 +475,11 @@ class LightRPCTest(ConfluxTestFramework):
         block_1_epoch = block['height']
         block_1_hash = block['hash']
 
-        self.log.info(f"Pass -- cfx_GetBlockByHash")
+        self.log.info("Pass -- cfx_GetBlockByHash")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getBlockByEpochNumber...")
+        self.log.info("Checking cfx_getBlockByEpochNumber...")
 
         block = self.rpc[FULLNODE0].block_by_epoch("earliest", True)
         light_block = self.rpc[LIGHTNODE].block_by_epoch("earliest", True)
@@ -507,11 +507,11 @@ class LightRPCTest(ConfluxTestFramework):
         block_2_epoch = block['height']
         block_2_hash = block['hash']
 
-        self.log.info(f"Pass -- cfx_getBlockByEpochNumber")
+        self.log.info("Pass -- cfx_getBlockByEpochNumber")
 
         # --------------------------
 
-        self.log.info(f"Checking cfx_getBlockByHashWithPivotAssumption...")
+        self.log.info("Checking cfx_getBlockByHashWithPivotAssumption...")
 
         # NOTE: do not use "latest_state" or "latest_mined" as these
         # will point to different epochs on full and light nodes
@@ -531,7 +531,7 @@ class LightRPCTest(ConfluxTestFramework):
         assert_raises_rpc_error(None, None, self.nodes[LIGHTNODE].cfx_getBlockByHashWithPivotAssumption, block_1_hash, block_2_hash, block_1_epoch)
         assert_raises_rpc_error(None, None, self.nodes[LIGHTNODE].cfx_getBlockByHashWithPivotAssumption, block_1_hash, block_1_hash, block_2_epoch)
 
-        self.log.info(f"Pass -- cfx_getBlockByHashWithPivotAssumption")
+        self.log.info("Pass -- cfx_getBlockByHashWithPivotAssumption")
 
     def assert_txs_equal(self, light_tx, tx):
         # light nodes do not retrieve receipts for tx queries
@@ -545,22 +545,22 @@ class LightRPCTest(ConfluxTestFramework):
         assert_equal(light_tx, tx)
 
     def test_tx_methods(self):
-        self.log.info(f"Checking cfx_getTransactionByHash...")
+        self.log.info("Checking cfx_getTransactionByHash...")
         full = self.rpc[FULLNODE0].get_tx(self.deploy_tx)
         light = self.rpc[LIGHTNODE].get_tx(self.deploy_tx)
         self.assert_txs_equal(light, full)
-        self.log.info(f"Pass -- cfx_getTransactionByHash")
+        self.log.info("Pass -- cfx_getTransactionByHash")
 
-        self.log.info(f"Checking cfx_getTransactionReceipt...")
+        self.log.info("Checking cfx_getTransactionReceipt...")
         full = self.rpc[FULLNODE0].get_transaction_receipt(self.deploy_tx)
         light = self.rpc[LIGHTNODE].get_transaction_receipt(self.deploy_tx)
         assert_equal(light, full)
-        self.log.info(f"Pass -- cfx_getTransactionReceipt")
+        self.log.info("Pass -- cfx_getTransactionReceipt")
 
         # note: cfx_getLogs and cfx_sendRawTransaction have separate tests
 
     def test_not_supported(self):
-        self.log.info(f"Checking not supported APIs...")
+        self.log.info("Checking not supported APIs...")
 
         assert_raises_rpc_error(-32000, None, self.nodes[LIGHTNODE].cfx_call, {}, "latest_checkpoint")
         assert_raises_rpc_error(-32000, None, self.nodes[LIGHTNODE].cfx_estimateGasAndCollateral, {}, "latest_checkpoint")
@@ -569,7 +569,7 @@ class LightRPCTest(ConfluxTestFramework):
         assert_raises_rpc_error(-32000, None, self.nodes[LIGHTNODE].cfx_getEpochReceipts, "latest_checkpoint")
         assert_raises_rpc_error(-32000, None, self.nodes[LIGHTNODE].cfx_getSupplyInfo, "latest_checkpoint")
 
-        self.log.info(f"Pass -- not supported APIs")
+        self.log.info("Pass -- not supported APIs")
 
     def run_test(self):
         self.test_local_methods()

@@ -38,12 +38,15 @@ def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
     target_fee = round(tx_size * fee_per_kB / 1000, 8)
     if fee < target_fee:
-        raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)" %
-                             (str(fee), str(target_fee)))
+        raise AssertionError(
+            f"Fee of {str(fee)} BTC too low! (Should be {str(target_fee)} BTC)"
+        )
+
     # allow the wallet's estimation to be at most 2 bytes off
     if fee > (tx_size + 2) * fee_per_kB / 1000:
-        raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" %
-                             (str(fee), str(target_fee)))
+        raise AssertionError(
+            f"Fee of {str(fee)} BTC too high! (Should be {str(target_fee)} BTC)"
+        )
 
 
 def assert_equal(thing1, thing2, *args):
@@ -54,17 +57,17 @@ def assert_equal(thing1, thing2, *args):
 
 def assert_ne(thing1, thing2):
     if thing1 == thing2:
-        raise AssertionError("not(%s)" % " != ".join([thing1, thing2]))
+        raise AssertionError(f'not({" != ".join([thing1, thing2])})')
 
 
 def assert_greater_than(thing1, thing2):
     if thing1 <= thing2:
-        raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
+        raise AssertionError(f"{str(thing1)} <= {str(thing2)}")
 
 
 def assert_greater_than_or_equal(thing1, thing2):
     if thing1 < thing2:
-        raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
+        raise AssertionError(f"{str(thing1)} < {str(thing2)}")
 
 
 def assert_raises(exc, fun, *args, **kwds):
@@ -108,7 +111,7 @@ def assert_raises_process_error(returncode, output, fun, *args, **kwds):
         if returncode != e.returncode:
             raise AssertionError("Unexpected returncode %i" % e.returncode)
         if output not in e.output:
-            raise AssertionError("Expected substring not found:" + e.output)
+            raise AssertionError(f"Expected substring not found:{e.output}")
     else:
         raise AssertionError("No exception raised")
 
@@ -195,23 +198,19 @@ def assert_array_result(object_array,
         assert_equal(expected, {})
     num_matched = 0
     for item in object_array:
-        all_match = True
-        for key, value in to_match.items():
-            if item[key] != value:
-                all_match = False
+        all_match = all(item[key] == value for key, value in to_match.items())
         if not all_match:
             continue
         elif should_not_find:
             num_matched = num_matched + 1
         for key, value in expected.items():
             if item[key] != value:
-                raise AssertionError(
-                    "%s : expected %s=%s" % (str(item), str(key), str(value)))
+                raise AssertionError(f"{str(item)} : expected {str(key)}={str(value)}")
             num_matched = num_matched + 1
     if num_matched == 0 and not should_not_find:
-        raise AssertionError("No objects matched %s" % (str(to_match)))
+        raise AssertionError(f"No objects matched {str(to_match)}")
     if num_matched > 0 and should_not_find:
-        raise AssertionError("Objects were found %s" % (str(to_match)))
+        raise AssertionError(f"Objects were found {str(to_match)}")
 
 
 # Utility functions
@@ -244,21 +243,24 @@ def wait_until(predicate,
             with lock:
                 if predicate():
                     return
-        else:
-            if predicate():
-                return
+        elif predicate():
+            return
         attempt += 1
         time.sleep(0.5)
 
     # Print the cause of the timeout
     predicate_source = inspect.getsourcelines(predicate)
-    logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
+    logger.error(f"wait_until() failed. Predicate: {predicate_source}")
     if attempt >= attempts:
-        raise AssertionError("Predicate {} not true after {} attempts".format(
-            predicate_source, attempts))
+        raise AssertionError(
+            f"Predicate {predicate_source} not true after {attempts} attempts"
+        )
+
     elif time.time() >= time_end:
-        raise AssertionError("Predicate {} not true after {} seconds".format(
-            predicate_source, timeout))
+        raise AssertionError(
+            f"Predicate {predicate_source} not true after {timeout} seconds"
+        )
+
     raise RuntimeError('Unreachable')
 
 
@@ -269,12 +271,30 @@ def initialize_tg_config(dirname, nodes, genesis_nodes, chain_id, initial_seed="
     tg_config_gen = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../target/release/pos-genesis-tool")
     try:
         if pkfile is None:
-            check_output([tg_config_gen, "random", "--num-validator={}".format(nodes),
-                    "--num-genesis-validator={}".format(genesis_nodes), "--chain-id={}".format(chain_id),
-                          "--initial-seed={}".format(initial_seed)], cwd=dirname)
+            check_output(
+                [
+                    tg_config_gen,
+                    "random",
+                    f"--num-validator={nodes}",
+                    f"--num-genesis-validator={genesis_nodes}",
+                    f"--chain-id={chain_id}",
+                    f"--initial-seed={initial_seed}",
+                ],
+                cwd=dirname,
+            )
+
         else:
             print([tg_config_gen, "frompub", pkfile], dirname)
-            check_output([tg_config_gen, "frompub", "--initial-seed={}".format(initial_seed), pkfile], cwd=dirname)
+            check_output(
+                [
+                    tg_config_gen,
+                    "frompub",
+                    f"--initial-seed={initial_seed}",
+                    pkfile,
+                ],
+                cwd=dirname,
+            )
+
     except CalledProcessError as e:
         print(e.output)
     if start_index is None:
@@ -294,14 +314,16 @@ def set_node_pos_config(dirname, n, setup_keys=True, pos_round_time_ms=1000):
     net_config_dir = os.path.join(datadir, 'blockchain_data', 'net_config')
     os.makedirs(net_config_dir, exist_ok = True)
     os.makedirs(os.path.join(datadir, 'pos_db'), exist_ok = True)
-    validator_config = {}
-    validator_config['base'] = {
-        'data_dir': os.path.join(datadir, 'pos_db'),
-        'role': 'validator',
-        'waypoint': {
-            'from_config': waypoint,
+    validator_config = {
+        'base': {
+            'data_dir': os.path.join(datadir, 'pos_db'),
+            'role': 'validator',
+            'waypoint': {
+                'from_config': waypoint,
+            },
         }
     }
+
     validator_config['execution'] = {
         'genesis_file_location': genesis_path,
     }
@@ -327,7 +349,10 @@ def set_node_pos_config(dirname, n, setup_keys=True, pos_round_time_ms=1000):
         f.write(yaml.dump(validator_config, default_flow_style=False))
     if setup_keys:
         shutil.copyfile(os.path.join(private_keys_dir, str(n)), os.path.join(net_config_dir, 'pos_key'))
-        shutil.copyfile(os.path.join(private_keys_dir, "pow_sk"+str(n)), os.path.join(datadir, 'pow_sk'))
+        shutil.copyfile(
+            os.path.join(private_keys_dir, f"pow_sk{str(n)}"),
+            os.path.join(datadir, 'pow_sk'),
+        )
 
 
 def initialize_datadir(dirname, n, port_min, conf_parameters, extra_files: dict = {}):
@@ -335,21 +360,22 @@ def initialize_datadir(dirname, n, port_min, conf_parameters, extra_files: dict 
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     with open(
-            os.path.join(datadir, "conflux.conf"), 'w', encoding='utf8') as f:
+                os.path.join(datadir, "conflux.conf"), 'w', encoding='utf8') as f:
         local_conf = {
             "tcp_port": str(p2p_port(n)),
             "jsonrpc_local_http_port": str(rpc_port(n)),
             "jsonrpc_ws_port": str(pubsub_port(n)),
             "jsonrpc_http_port": str(remote_rpc_port(n)),
             "jsonrpc_http_eth_port": str(evm_rpc_port(n)),
-            "pos_config_path": "\'{}\'".format(os.path.join(datadir, "validator_full_node.yaml")),
-            "pos_initial_nodes_path": "\'{}\'".format(os.path.join(dirname, "initial_nodes.json")),
-            "pos_private_key_path": "'{}'".format(os.path.join(datadir, "blockchain_data", "net_config", "pos_key"))
+            "pos_config_path": f"""'{os.path.join(datadir, "validator_full_node.yaml")}'""",
+            "pos_initial_nodes_path": f"""'{os.path.join(dirname, "initial_nodes.json")}'""",
+            "pos_private_key_path": f"""'{os.path.join(datadir, "blockchain_data", "net_config", "pos_key")}'""",
         }
-        local_conf.update(conflux.config.small_local_test_conf)
-        local_conf.update(conf_parameters)
-        for k in local_conf:
-            f.write("{}={}\n".format(k, local_conf[k]))
+
+        local_conf |= conflux.config.small_local_test_conf
+        local_conf |= conf_parameters
+        for k, v in local_conf.items():
+            f.write("{}={}\n".format(k, v))
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     for file_name, content in extra_files.items():
@@ -359,7 +385,7 @@ def initialize_datadir(dirname, n, port_min, conf_parameters, extra_files: dict 
 
 
 def get_datadir_path(dirname, n):
-    return os.path.join(dirname, "node" + str(n))
+    return os.path.join(dirname, f"node{str(n)}")
 
 
 def append_config(datadir, options):
@@ -425,8 +451,23 @@ def disconnect_nodes(nodes, from_connection, node_num):
             raise
 
     # wait to disconnect
-    wait_until(lambda: [peer for peer in nodes[from_connection].getpeerinfo() if peer["nodeid"] == nodes[node_num].key] == [], timeout=5)
-    wait_until(lambda: [peer for peer in nodes[node_num].getpeerinfo() if peer["nodeid"] == nodes[from_connection].key] == [], timeout=5)
+    wait_until(
+        lambda: not [
+            peer
+            for peer in nodes[from_connection].getpeerinfo()
+            if peer["nodeid"] == nodes[node_num].key
+        ],
+        timeout=5,
+    )
+
+    wait_until(
+        lambda: not [
+            peer
+            for peer in nodes[node_num].getpeerinfo()
+            if peer["nodeid"] == nodes[from_connection].key
+        ],
+        timeout=5,
+    )
 
 
 def check_handshake(from_connection, target_node_id):
@@ -435,14 +476,14 @@ def check_handshake(from_connection, target_node_id):
     added node 'target_node_id' into its peer set.
     """
     peers = from_connection.getpeerinfo()
-    for peer in peers:
-        if peer["nodeid"] == target_node_id and len(peer['protocols']) > 0:
-            return True
-    return False
+    return any(
+        peer["nodeid"] == target_node_id and len(peer['protocols']) > 0
+        for peer in peers
+    )
 
 
 def get_peer_addr(connection):
-    return "{}:{}".format(connection.ip, connection.port)
+    return f"{connection.ip}:{connection.port}"
 
 
 def connect_nodes(nodes, a, node_num, timeout=60):
@@ -629,7 +670,7 @@ def connect_sample_nodes(nodes, log, sample=3, latency_min=0, latency_max=300, t
         for _ in range(sample - 1):
             while True:
                 p = random.randint(0, num_nodes - 1)
-                if p not in peer[i] and not p == i:
+                if p not in peer[i] and p != i:
                     peer[i].append(p)
                     lat = random.randint(latency_min, latency_max)
                     latencies[i][p] = lat
@@ -643,7 +684,10 @@ def connect_sample_nodes(nodes, log, sample=3, latency_min=0, latency_max=300, t
 
     for t in threads:
         t.join(timeout)
-        assert not t.is_alive(), "Node[{}] connect to other nodes timeout in {} seconds".format(t.a, timeout)
+        assert (
+            not t.is_alive()
+        ), f"Node[{t.a}] connect to other nodes timeout in {timeout} seconds"
+
         assert not t.failed, "connect_sample_nodes failed."
 
 
@@ -680,7 +724,11 @@ class ConnectThread(threading.Thread):
                     time.sleep(1)
         except Exception as e:
             node = self.nodes[self.a]
-            self.log.error("Node " + str(self.a) + " fails to be connected to " + str(self.peers) + ", ip={}, index={}".format(node.ip, node.index))
+            self.log.error(
+                f"Node {str(self.a)} fails to be connected to {str(self.peers)}"
+                + f", ip={node.ip}, index={node.index}"
+            )
+
             self.log.error(e)
             self.failed = True
 
@@ -712,12 +760,9 @@ def get_contract_instance(contract_dict=None,
             contract = w3.eth.contract(abi=abi, address=address)
         elif bytecode_file:
             bytecode = None
-            if bytecode_file:
-                with open(bytecode_file, 'r') as bytecode_file:
-                    bytecode = bytecode_file.read()
-                contract = w3.eth.contract(abi=abi, bytecode=bytecode)
-            else:
-                raise ValueError("The bytecode or the address must be provided")
+            with open(bytecode_file, 'r') as bytecode_file:
+                bytecode = bytecode_file.read()
+            contract = w3.eth.contract(abi=abi, bytecode=bytecode)
     return contract
 
 

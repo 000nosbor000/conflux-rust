@@ -24,7 +24,7 @@ class CrashFullNodeTest(ConfluxTestFramework):
         extra_args0 = ["--enable-discovery", "true", "--node-table-timeout-s", "1", "--node-table-promotion-timeout-s", "1",
                        "--archive"]
         self.start_node(0, extra_args = extra_args0)
-        bootnode_id = "cfxnode://{}@{}:{}".format(bootnode.key[2:], bootnode.ip, bootnode.port)
+        bootnode_id = f"cfxnode://{bootnode.key[2:]}@{bootnode.ip}:{bootnode.port}"
         self.node_extra_args = ["--bootnodes", bootnode_id] + extra_args0
         for i in range(1, self.num_nodes):
             self.start_node(i, extra_args=self.node_extra_args)

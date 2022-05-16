@@ -23,12 +23,10 @@ SOFTWARE.
 """
 
 
+
 BASE32_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'
 EXCLUDE_CHARS = {'o', 'i', 'l', 'q'}
-CHARSET = ''
-for c in BASE32_CHARS:
-    if c not in EXCLUDE_CHARS:
-        CHARSET += c
+CHARSET = ''.join(c for c in BASE32_CHARS if c not in EXCLUDE_CHARS)
 CHECKSUM_SIZE = 8
 
 
@@ -55,10 +53,7 @@ def prefix_expand(prefix):
 
 def calculate_checksum(prefix, payload):
     poly = polymod(prefix_expand(prefix) + payload + [0, 0, 0, 0, 0, 0, 0, 0])
-    out = list()
-    for i in range(CHECKSUM_SIZE):
-        out.append((poly >> 5 * (7 - i)) & 0x1f)
-    return out
+    return [(poly >> 5 * (7 - i)) & 0x1f for i in range(CHECKSUM_SIZE)]
 
 
 def verify_checksum(prefix, payload):
@@ -66,17 +61,11 @@ def verify_checksum(prefix, payload):
 
 
 def b32decode(inputs):
-    out = list()
-    for letter in inputs:
-        out.append(CHARSET.find(letter))
-    return out
+    return [CHARSET.find(letter) for letter in inputs]
 
 
 def b32encode(inputs):
-    out = ''
-    for char_code in inputs:
-        out += CHARSET[char_code]
-    return out
+    return ''.join(CHARSET[char_code] for char_code in inputs)
 
 
 def convertbits(data, frombits, tobits, pad=True):

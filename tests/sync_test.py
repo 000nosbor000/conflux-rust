@@ -22,7 +22,7 @@ class SyncTest(ConfluxTestFramework):
         block_number = 100
 
         start_p2p_connection(self.nodes)
-        
+
         best_block = self.nodes[1].generate_empty_blocks(1)[0]
         block1 = create_block(parent_hash=decode_hex(best_block), height=2)
         block2 = create_block(parent_hash=decode_hex(best_block), height=2, author=b'\x01' * 20)
@@ -52,7 +52,7 @@ class SyncTest(ConfluxTestFramework):
         self.log.info("Pass 2")
 
         disconnect_nodes(self.nodes, 0, 1)
-        for i in range(block_number):
+        for _ in range(block_number):
             chosen_peer = random.randint(1, self.num_nodes - 1)
             block_hash = self.nodes[chosen_peer].generate_empty_blocks(1)
             self.log.info("%s generate block %s", chosen_peer, block_hash)

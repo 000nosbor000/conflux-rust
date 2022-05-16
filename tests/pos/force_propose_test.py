@@ -18,17 +18,17 @@ from test_framework.util import *
 class PosForceProposeTest(DefaultConfluxTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.conf_parameters["vrf_proposal_threshold"] = '"{}"'.format(int_to_hex(int(2 ** 256 - 1)))
+        self.conf_parameters[
+            "vrf_proposal_threshold"
+        ] = f'"{int_to_hex(int(2 ** 256 - 1))}"'
+
         self.conf_parameters["pos_pivot_decision_defer_epoch_count"] = '120'
         # No auto timeout.
         self.pos_parameters["round_time_ms"] = 1000000000
         self.conf_parameters["pos_round_per_term"] = '10'
 
     def run_test(self):
-        clients = []
-        for node in self.nodes:
-            clients.append(RpcClient(node))
-
+        clients = [RpcClient(node) for node in self.nodes]
         # Initialize pos_consensus_blocks
         for _ in range(3):
             for client in clients:
@@ -74,7 +74,7 @@ class PosForceProposeTest(DefaultConfluxTestFramework):
             parent = clients[0].generate_block_with_parent(parent)
         sync_blocks(self.nodes)
         assert_equal(clients[0].block_by_epoch(int_to_hex(pivot_decision_height))["hash"], wrong_decision)
-        for i in range(3):
+        for _ in range(3):
             for client in clients:
                 client.pos_proposal_timeout()
             # Wait for proposal processing

@@ -50,8 +50,8 @@ class RpcTest(ConfluxTestFramework):
         sub_dir = os.path.join(cur_dir, name)
         for file in os.listdir(sub_dir):
             if file.startswith("test_") and file.endswith(".py"):
-                module_name = file[0:-3]
-                module = __import__(name + "." + module_name, fromlist=True)
+                module_name = file[:-3]
+                module = __import__(f"{name}.{module_name}", fromlist=True)
                 self._test_module(module)
 
     def _test_module(self, module):
@@ -82,7 +82,7 @@ class RpcTest(ConfluxTestFramework):
         for name in dir(obj):
             m = getattr(obj, name)
             if type(m) is types.MethodType and name.startswith("test_"):
-                self.log.info("Test " + class_name + "." + name)
+                self.log.info(f"Test {class_name}.{name}")
                 m()
 
     def _test_sayhello(self):
@@ -120,7 +120,7 @@ class RpcTest(ConfluxTestFramework):
     def _test_addlatency(self):
         def on_block_headers(node, _):
             msec = (datetime.datetime.now() - node.start_time).total_seconds() * 1000
-            self.log.info("Message arrived after " + str(msec) + "ms")
+            self.log.info(f"Message arrived after {str(msec)}ms")
             # The EventLoop in rust may have a deviation of a maximum of
             # 100ms. This is because the ticker is 100ms by default.
             assert msec >= node.latency_ms - 100

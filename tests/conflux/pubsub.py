@@ -19,7 +19,7 @@ class PubSubClient:
 
     async def subscribe(self, topic, *args):
         # connect if necessary
-        if self.ws == None:
+        if self.ws is None:
             self.ws = await websockets.connect(self.url)
 
         # subscribe

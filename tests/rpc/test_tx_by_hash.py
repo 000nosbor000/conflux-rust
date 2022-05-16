@@ -75,7 +75,7 @@ class TestGetTxByHash(RpcClient):
 
         # new pivot chain
         fork1 = self.generate_block_with_parent(root, [])
-        for _ in range(0, epoch_delta*2):
+        for _ in range(epoch_delta*2):
             fork1 = self.generate_block_with_parent(fork1, [])
         assert_equal(self.best_block_hash(), fork1)
         # tx not found in new pivot chain without reference block

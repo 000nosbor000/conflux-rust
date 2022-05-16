@@ -39,7 +39,7 @@ class TestGetBlockByEpoch(RpcClient):
         assert_equal(self.block_by_epoch(self.EPOCH_EARLIEST)["epochNumber"], hex(0))
 
         parents = [root]
-        for _ in blocks[0:-1]:
+        for _ in blocks[:-1]:
             parents.append(self.generate_block_with_parent(parents[-1], []))
             # pivot chain not changed
             assert_equal(self.block_by_epoch(self.EPOCH_LATEST_MINED)["hash"], blocks[-1])

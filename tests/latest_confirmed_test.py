@@ -23,12 +23,15 @@ class LatestConfirmedTest(ConfluxTestFramework):
         assert_equal(genesis_epoch, 0)
 
         # generate blocks in 0.5 sec interval like default
-        for i in range(0, 160):
+        for _ in range(160):
             self.nodes[0].generate_empty_blocks(1)
             time.sleep(0.5)
             last_mined = client.epoch_number(client.EPOCH_LATEST_MINED)
             confirmed = client.epoch_number(client.EPOCH_LATEST_CONFIRMED)
-            self.log.info("Mined epoch: " + str(last_mined) + " Confirmed epoch: " + str(confirmed))
+            self.log.info(
+                f"Mined epoch: {str(last_mined)} Confirmed epoch: {str(confirmed)}"
+            )
+
             # This is a very loose bound given the default parameter for Conflux.
             # If we change consensus/confirmation related parameters, this needs to be
             # changed as well.

@@ -48,7 +48,10 @@ class P2PTest(ConfluxTestFramework):
         c1 = self.client.get_collateral_for_storage(genesis_addr)
         assert_equal(c1 - c0, 1920 * 10 ** 18 / 1024)
         contract_addr = receipt['contractCreated']
-        self.log.info("Contract " + str(contract_addr) + " created, start transferring tokens")
+        self.log.info(
+            f"Contract {str(contract_addr)} created, start transferring tokens"
+        )
+
 
         tx_n = 10
         self.tx_conf["to"] = contract_addr
@@ -71,9 +74,9 @@ class P2PTest(ConfluxTestFramework):
         self.log.info("Wait for transactions to be executed")
         self.wait_for_tx(all_txs)
         self.log.info("Check final token balance")
-        for sk in balance_map:
+        for sk, value_ in balance_map.items():
             addr = priv_to_addr(sk)
-            assert_equal(self.get_balance(erc20_contract, addr), balance_map[sk])
+            assert_equal(self.get_balance(erc20_contract, addr), value_)
         c2 = self.client.get_collateral_for_storage(genesis_addr)
         assert_equal(c2 - c1, 64 * tx_n * 10 ** 18 / 1024)
         block_gen_thread.stop()

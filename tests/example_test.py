@@ -26,12 +26,12 @@ class ExampleTest(ConfluxTestFramework):
         assert (self.nodes[1].getblockcount() == 3)
 
         connect_nodes(self.nodes, 0, 1)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
         assert (self.nodes[0].getblockcount() == 4)
 
         self.nodes[0].generate_empty_blocks(1)
         self.nodes[1].generate_empty_blocks(1)
-        sync_blocks(self.nodes[0:2])
+        sync_blocks(self.nodes[:2])
         assert (self.nodes[0].getblockcount() == 6)
         assert (self.nodes[1].getblockcount() == 6)
 

@@ -13,9 +13,10 @@ class TestGetPosRewardByPowEpoch(RpcClient):
             self.generate_empty_blocks(4)
             pos_status = self.node.pos_getStatus()
             current_pos_epoch = int(pos_status['epoch'], 0)
-            if current_pos_epoch > 2:
-                if self.check_pow_and_pos_reward(current_pos_epoch):
-                    break
+            if current_pos_epoch > 2 and self.check_pow_and_pos_reward(
+                current_pos_epoch
+            ):
+                break
 
     def test_epoch_has_no_reward(self):
         epoch = "0x1"
@@ -24,7 +25,7 @@ class TestGetPosRewardByPowEpoch(RpcClient):
 
     def check_pow_and_pos_reward(self, current_pos_epoch):
         reward_by_pos_epoch = self.node.pos_getRewardsByEpoch(hex(current_pos_epoch - 1))
-        if reward_by_pos_epoch == None:
+        if reward_by_pos_epoch is None:
             return False
 
         print("check_pow_and_pos_reward", reward_by_pos_epoch)

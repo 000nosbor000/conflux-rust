@@ -45,9 +45,7 @@ def to_string(value):
 
 
 def int_to_bytes(value):
-    if isinstance(value, bytes):
-        return value
-    return int_to_big_endian(value)
+    return value if isinstance(value, bytes) else int_to_big_endian(value)
 
 
 def to_string_for_regexp(value):
@@ -102,13 +100,11 @@ def ecrecover_to_pub(rawhash, v, r, s):
         except BaseException:
             x, y = 0, 0
             pub = b"\x00" * 64
+    elif result := ecdsa_raw_recover(rawhash, (v, r, s)):
+        x, y = result
+        pub = encode_int32(x) + encode_int32(y)
     else:
-        result = ecdsa_raw_recover(rawhash, (v, r, s))
-        if result:
-            x, y = result
-            pub = encode_int32(x) + encode_int32(y)
-        else:
-            raise ValueError('Invalid VRS')
+        raise ValueError('Invalid VRS')
     assert len(pub) == 64
     return pub, x, y
 
@@ -118,7 +114,7 @@ def ecsign(rawhash, key):
         pk = coincurve.PrivateKey(key)
         signature = pk.sign_recoverable(rawhash, hasher=None)
         v = safe_ord(signature[64]) + 27
-        r = big_endian_to_int(signature[0:32])
+        r = big_endian_to_int(signature[:32])
         s = big_endian_to_int(signature[32:64])
     else:
         v, r, s = ecdsa_raw_sign(rawhash, key)
@@ -155,10 +151,7 @@ def mk_metropolis_contract_address(sender, initcode):
 
 
 def safe_ord(value):
-    if isinstance(value, int):
-        return value
-    else:
-        return ord(value)
+    return value if isinstance(value, int) else ord(value)
 
 
 # decorator
@@ -244,7 +237,7 @@ def checksum_encode(addr):  # Takes a 20-byte binary address as input
             o += c
         else:
             o += c.upper() if (v & (2 ** (255 - 4 * i))) else c.lower()
-    return '0x' + o
+    return f'0x{o}'
 
 
 def check_checksum(addr):
@@ -256,9 +249,9 @@ def normalize_address(x, allow_blank=False):
         return int_to_addr(x)
     if allow_blank and x in {'', b''}:
         return b''
-    if len(x) in (42, 50) and x[:2] in {'0x', b'0x'}:
+    if len(x) in {42, 50} and x[:2] in {'0x', b'0x'}:
         x = x[2:]
-    if len(x) in (40, 48):
+    if len(x) in {40, 48}:
         x = decode_hex(x)
     if len(x) == 24:
         assert len(x) == 24 and sha3(x[:20])[:4] == x[-4:]
@@ -325,7 +318,7 @@ def int_to_addr(x):
 def coerce_addr_to_bin(x):
     if is_numeric(x):
         return encode_hex(zpad(big_endian_int.serialize(x), 20))
-    elif len(x) == 40 or len(x) == 0:
+    elif len(x) in {40, 0}:
         return decode_hex(x)
     else:
         return zpad(x, 20)[-20:]
@@ -334,7 +327,7 @@ def coerce_addr_to_bin(x):
 def coerce_addr_to_hex(x):
     if is_numeric(x):
         return encode_hex(zpad(big_endian_int.serialize(x), 20))
-    elif len(x) == 40 or len(x) == 0:
+    elif len(x) in {40, 0}:
         return x
     else:
         return encode_hex(zpad(x, 20)[-20:])
@@ -393,14 +386,15 @@ def decode_bin(v):
 
 def decode_addr(v):
     """decodes an address from serialization"""
-    if len(v) not in [0, 20]:
+    if len(v) in {0, 20}:
+        return encode_hex(v)
+    else:
         raise Exception("Serialized addresses must be empty or 20 bytes long!")
-    return encode_hex(v)
 
 
 def decode_int(v):
     """decodes and integer from serialization"""
-    if len(v) > 0 and (v[0] == b'\x00' or v[0] == 0):
+    if len(v) > 0 and v[0] in [b'\x00', 0]:
         raise Exception("No leading zero bytes allowed for integers")
     return big_endian_to_int(v)
 
@@ -431,10 +425,7 @@ def encode_int256(v):
 
 
 def scan_bin(v):
-    if v[:2] in ('0x', b'0x'):
-        return decode_hex(v[2:])
-    else:
-        return decode_hex(v)
+    return decode_hex(v[2:]) if v[:2] in ('0x', b'0x') else decode_hex(v)
 
 
 def scan_int(v):
@@ -462,12 +453,13 @@ encoders = {
 
 # Encoding to printable format
 printers = {
-    "bin": lambda v: '0x' + encode_hex(v),
+    "bin": lambda v: f'0x{encode_hex(v)}',
     "addr": lambda v: v,
     "int": lambda v: to_string(v),
     "trie_root": lambda v: encode_hex(v),
-    "int256b": lambda x: encode_hex(zpad(encode_int256(x), 256))
+    "int256b": lambda x: encode_hex(zpad(encode_int256(x), 256)),
 }
+
 
 # Decoding from printable format
 scanners = {
@@ -493,8 +485,13 @@ def parse_as_bin(s):
 
 
 def parse_as_int(s):
-    return s if is_numeric(s) else int(
-        '0' + s[2:], 16) if s[:2] == '0x' else int(s)
+    return (
+        s
+        if is_numeric(s)
+        else int(f'0{s[2:]}', 16)
+        if s[:2] == '0x'
+        else int(s)
+    )
 
 
 def print_func_call(ignore_first_arg=False, max_call_number=100):
@@ -529,13 +526,18 @@ def print_func_call(ignore_first_arg=False, max_call_number=100):
             local['call_number'] += 1
             tmp_args = args[1:] if ignore_first_arg and len(args) else args
             this_call_number = local['call_number']
-            print(('{0}#{1} args: {2}, {3}'.format(
-                f.__name__,
-                this_call_number,
-                ', '.join([display(x) for x in tmp_args]),
-                ', '.join(display(key) + '=' + to_string(value)
-                          for key, value in kwargs.items())
-            )))
+            print(
+                '{0}#{1} args: {2}, {3}'.format(
+                    f.__name__,
+                    this_call_number,
+                    ', '.join([display(x) for x in tmp_args]),
+                    ', '.join(
+                        f'{display(key)}={to_string(value)}'
+                        for key, value in kwargs.items()
+                    ),
+                )
+            )
+
             res = f(*args, **kwargs)
             print(('{0}#{1} return: {2}'.format(
                 f.__name__,
@@ -552,10 +554,10 @@ def print_func_call(ignore_first_arg=False, max_call_number=100):
 
 
 def dump_state(trie):
-    res = ''
-    for k, v in list(trie.to_dict().items()):
-        res += '%r:%r\n' % (encode_hex(k), encode_hex(v))
-    return res
+    return ''.join(
+        '%r:%r\n' % (encode_hex(k), encode_hex(v))
+        for k, v in list(trie.to_dict().items())
+    )
 
 
 class Denoms():

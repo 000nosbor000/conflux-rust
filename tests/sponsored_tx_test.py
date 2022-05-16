@@ -102,7 +102,7 @@ class SponsoredTxTest(ConfluxTestFramework):
         self.log.info("Initializing contract")
         genesis_key = self.genesis_priv_key
         genesis_addr = encode_hex_0x(self.genesis_addr)
-        self.log.info("genesis_addr={}".format(genesis_addr))
+        self.log.info(f"genesis_addr={genesis_addr}")
         nonce = 0
         gas_price = 1
         gas = CONTRACT_DEFAULT_GAS
@@ -120,7 +120,7 @@ class SponsoredTxTest(ConfluxTestFramework):
         node = self.nodes[0]
         client = RpcClient(node)
         (addr1, priv_key1) = client.rand_account()
-        self.log.info("addr1={}".format(addr1))
+        self.log.info(f"addr1={addr1}")
         tx = client.new_tx(
             sender=genesis_addr,
             priv_key=genesis_key,
@@ -138,7 +138,7 @@ class SponsoredTxTest(ConfluxTestFramework):
             sender_key=self.genesis_priv_key,
             storage_limit=20000)
         contract_addr = self.wait_for_tx([transaction], True)[0]['contractCreated']
-        self.log.info("contract_addr={}".format(contract_addr))
+        self.log.info(f"contract_addr={contract_addr}")
         assert_equal(client.get_balance(contract_addr), 0)
 
         # sponsor the contract succeed

@@ -26,7 +26,7 @@ def encode_u256(number):
     return ("%x" % number).zfill(64)
 
 def number_to_topic(number):
-    return "0x" + encode_u256(number)
+    return f"0x{encode_u256(number)}"
 
 def mapped_address(hex_addr):
     return "0x" + keccak(bytes.fromhex(hex_addr.replace("0x", "")))[12:].hex()
@@ -45,25 +45,39 @@ class PhantomTransactionTest(Web3Base):
         assert_equal(self.nodes[0].eth_getBalance(self.evmAccount.address), hex(1 * 10 ** 18))
 
         # deploy Conflux space contract
-        self.confluxContractAddr = self.deploy_conflux_space(CONFLUX_CONTRACT_PATH + ".bytecode")
+        self.confluxContractAddr = self.deploy_conflux_space(
+            f"{CONFLUX_CONTRACT_PATH}.bytecode"
+        )
+
         print(f'Conflux contract: {self.confluxContractAddr}')
 
-        abi_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), CONFLUX_CONTRACT_PATH + ".abi")
+        abi_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            f"{CONFLUX_CONTRACT_PATH}.abi",
+        )
+
         assert(os.path.isfile(abi_file))
         abi = open(abi_file).read()
         self.confluxContract = self.w3.eth.contract(abi=abi)
 
         # deploy EVM space contract
-        self.evmContractAddr = self.deploy_evm_space(EVM_CONTRACT_PATH + ".bytecode")
+        self.evmContractAddr = self.deploy_evm_space(f"{EVM_CONTRACT_PATH}.bytecode")
         print(f'EVM contract: {self.evmContractAddr}')
 
-        abi_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), EVM_CONTRACT_PATH + ".abi")
+        abi_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), f"{EVM_CONTRACT_PATH}.abi"
+        )
+
         assert(os.path.isfile(abi_file))
         abi = open(abi_file).read()
         self.evmContract = self.w3.eth.contract(abi=abi)
 
         # import CrossSpaceCall abi
-        abi_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), CROSS_SPACE_CALL_PATH + ".abi")
+        abi_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            f"{CROSS_SPACE_CALL_PATH}.abi",
+        )
+
         assert(os.path.isfile(abi_file))
         abi = open(abi_file).read()
         self.crossSpaceContract = self.w3.eth.contract(abi=abi)
@@ -228,7 +242,11 @@ class PhantomTransactionTest(Web3Base):
         assert_equal(filtered, None) # we return `null` instead of `[]`
 
     def test_createEVM(self):
-        bytecode_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), EVM_CONTRACT_PATH + ".bytecode")
+        bytecode_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            f"{EVM_CONTRACT_PATH}.bytecode",
+        )
+
         assert(os.path.isfile(bytecode_file))
         bytecode = open(bytecode_file).read()
 
@@ -287,7 +305,7 @@ class PhantomTransactionTest(Web3Base):
 
         assert_equal(phantom1["from"], mapped_address(self.confluxContractAddr))
         assert_equal(phantom1["to"], None)
-        assert_equal(phantom1["input"], "0x" + bytecode)
+        assert_equal(phantom1["input"], f"0x{bytecode}")
         assert_equal(phantom1["status"], "0x1")
         assert_equal(phantom1["blockHash"], block["hash"])
         assert_equal(phantom1["blockNumber"], block["number"])
@@ -299,28 +317,34 @@ class PhantomTransactionTest(Web3Base):
 
         trace1 = self.nodes[0].ethrpc.trace_transaction(phantom1["hash"])
 
-        assert_equal(trace1, [{
-            "type": "create",
-            "action": {
-                "createType": "create",
-                "from": phantom1["from"],
-                "init": phantom1["input"],
-                "gas": "0x0",
-                "value": phantom1["value"],
-            },
-            "result": {
-                "address": newContractAddr,
-                "gasUsed": "0x0",
-                "code": "0x" + bytecode[64:],
-            },
-            "subtraces": 0,
-            "traceAddress": [],
-            "blockHash": phantom1["blockHash"],
-            "blockNumber": int(phantom1["blockNumber"], 16),
-            "transactionHash": phantom1["hash"],
-            "transactionPosition": int(phantom1["transactionIndex"], 16),
-            "valid": True,
-        }])
+        assert_equal(
+            trace1,
+            [
+                {
+                    "type": "create",
+                    "action": {
+                        "createType": "create",
+                        "from": phantom1["from"],
+                        "init": phantom1["input"],
+                        "gas": "0x0",
+                        "value": phantom1["value"],
+                    },
+                    "result": {
+                        "address": newContractAddr,
+                        "gasUsed": "0x0",
+                        "code": f"0x{bytecode[64:]}",
+                    },
+                    "subtraces": 0,
+                    "traceAddress": [],
+                    "blockHash": phantom1["blockHash"],
+                    "blockNumber": int(phantom1["blockNumber"], 16),
+                    "transactionHash": phantom1["hash"],
+                    "transactionPosition": int(phantom1["transactionIndex"], 16),
+                    "valid": True,
+                }
+            ],
+        )
+
 
         # test trace_block
         block_traces = self.nodes[0].ethrpc.trace_block(receipt["epochNumber"])

@@ -16,7 +16,7 @@ FOO_TOPIC = encode_hex_0x(keccak(b"Foo(address,uint32)"))
 SNAPSHOT_EPOCH_COUNT = 50
 
 def address_to_topic(address):
-    return "0x" + address[2:].zfill(64)
+    return f"0x{address[2:].zfill(64)}"
 
 def number_to_topic(number):
     return "0x" + ("%x" % number).zfill(64)

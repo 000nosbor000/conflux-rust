@@ -69,7 +69,7 @@ class P2PConnection(asyncore.dispatcher):
         try:
             self.connect((dstaddr, dstport))
         except Exception as e:
-            logger.debug("network connect error" + str(e))
+            logger.debug(f"network connect error{str(e)}")
             self.handle_close()
 
     def peer_disconnect(self):
@@ -136,10 +136,7 @@ class P2PConnection(asyncore.dispatcher):
     def assemble_connection_packet(self, data):
         data_len = struct.pack("<L", len(data))[:3]
 
-        if len(data) > 3:
-            return data_len + data[3:] + data[:3]
-        else:
-            return data_len + data
+        return data_len + data[3:] + data[:3] if len(data) > 3 else data_len + data
 
     def read_session_packet(self, packet):
         if packet[-2] == 0:
@@ -190,7 +187,7 @@ class P2PConnection(asyncore.dispatcher):
                     assert packet_id == PACKET_PROTOCOL
                     self.on_protocol_packet(protocol, payload)
         except Exception as e:
-            logger.exception('Error reading message: ' + repr(e))
+            logger.exception(f'Error reading message: {repr(e)}')
             raise
 
     def on_handshake(self, payload) -> bool:
@@ -315,7 +312,8 @@ class P2PInterface(P2PConnection):
         self.peer_pubkey = None
         self.priv_key, self.pub_key = ec_random_keys()
         x, y = self.pub_key
-        self.key = "0x" + utils.encode_hex(bytes(int_to_32bytearray(x))) + utils.encode_hex(bytes(int_to_32bytearray(y)))
+        self.key = f"0x{utils.encode_hex(bytes(int_to_32bytearray(x)))}{utils.encode_hex(bytes(int_to_32bytearray(y)))}"
+
         self.had_status = False
         self.on_packet_func = {}
         self.remote = remote
@@ -350,61 +348,93 @@ class P2PInterface(P2PConnection):
                 assert(protocol == self.protocol)  # Possible to be false?
                 packet_type, payload = self.read_protocol_msg(payload)
                 self.protocol_message_count[packet_type] += 1
-                msg = None
                 msg_class = get_msg_class(packet_type)
                 logger.debug("%s %s", packet_type, rlp.decode(payload))
-                if msg_class is not None:
-                    msg = rlp.decode(payload, msg_class)
+                msg = rlp.decode(payload, msg_class) if msg_class is not None else None
                 if packet_type == STATUS_V3:
-                    self._log_message("receive", "STATUS, terminal_hashes:{}"
-                                      .format([utils.encode_hex(i) for i in msg.terminal_block_hashes]))
+                    self._log_message(
+                        "receive",
+                        f"STATUS, terminal_hashes:{[utils.encode_hex(i) for i in msg.terminal_block_hashes]}",
+                    )
+
                     self.had_status = True
                 elif packet_type == GET_BLOCK_HEADERS:
-                    self._log_message("receive", "GET_BLOCK_HEADERS of {}".format(msg.hashes))
+                    self._log_message("receive", f"GET_BLOCK_HEADERS of {msg.hashes}")
                 elif packet_type == GET_BLOCK_HEADER_CHAIN:
-                    self._log_message("receive", "GET_BLOCK_HEADER_CHAIN of {} {}".format(msg.hash, msg.max_blocks))
+                    self._log_message(
+                        "receive",
+                        f"GET_BLOCK_HEADER_CHAIN of {msg.hash} {msg.max_blocks}",
+                    )
+
                 elif packet_type == GET_BLOCK_BODIES:
                     hashes = msg.hashes
-                    self._log_message("receive", "GET_BLOCK_BODIES of {} blocks".format(len(hashes)))
+                    self._log_message("receive", f"GET_BLOCK_BODIES of {len(hashes)} blocks")
                 elif packet_type == GET_BLOCK_HEADERS_RESPONSE:
-                    self._log_message("receive", "BLOCK_HEADERS of {} headers".format(len(msg.headers)))
+                    self._log_message("receive", f"BLOCK_HEADERS of {len(msg.headers)} headers")
                 elif packet_type == GET_BLOCK_BODIES_RESPONSE:
-                    self._log_message("receive", "BLOCK_BODIES of {} blocks".format(len(msg)))
+                    self._log_message("receive", f"BLOCK_BODIES of {len(msg)} blocks")
                 elif packet_type == NEW_BLOCK:
-                    self._log_message("receive", "NEW_BLOCK, hash:{}".format(msg.block.block_header.hash))
+                    self._log_message("receive", f"NEW_BLOCK, hash:{msg.block.block_header.hash}")
                 elif packet_type == GET_BLOCK_HASHES:
-                    self._log_message("receive", "GET_BLOCK_HASHES, hash:{}, max_blocks:{}"
-                                      .format(msg.hash, msg.max_blocks))
+                    self._log_message(
+                        "receive",
+                        f"GET_BLOCK_HASHES, hash:{msg.hash}, max_blocks:{msg.max_blocks}",
+                    )
+
                 elif packet_type == GET_BLOCK_HASHES_RESPONSE:
-                    self._log_message("receive", "BLOCK_HASHES, {} hashes".format(len(msg.hashes)))
+                    self._log_message("receive", f"BLOCK_HASHES, {len(msg.hashes)} hashes")
                 elif packet_type == GET_TERMINAL_BLOCK_HASHES:
                     self._log_message("receive", "GET_TERMINAL_BLOCK_HASHES")
                 elif packet_type == TRANSACTIONS:
-                    self._log_message("receive", "TRANSACTIONS, {} transactions".format(len(msg.transactions)))
+                    self._log_message(
+                        "receive",
+                        f"TRANSACTIONS, {len(msg.transactions)} transactions",
+                    )
+
                 elif packet_type == GET_TERMINAL_BLOCK_HASHES_RESPONSE:
-                    self._log_message("receive", "TERMINAL_BLOCK_HASHES, {} hashes".format(len(msg.hashes)))
+                    self._log_message(
+                        "receive",
+                        f"TERMINAL_BLOCK_HASHES, {len(msg.hashes)} hashes",
+                    )
+
                 elif packet_type == NEW_BLOCK_HASHES:
-                    self._log_message("receive", "NEW_BLOCK_HASHES, {} hashes".format(len(msg.block_hashes)))
+                    self._log_message(
+                        "receive",
+                        f"NEW_BLOCK_HASHES, {len(msg.block_hashes)} hashes",
+                    )
+
                 elif packet_type == GET_BLOCKS_RESPONSE:
-                    self._log_message("receive", "BLOCKS, {} blocks".format(len(msg.blocks)))
+                    self._log_message("receive", f"BLOCKS, {len(msg.blocks)} blocks")
                 elif packet_type == GET_CMPCT_BLOCKS_RESPONSE:
-                    self._log_message("receive", "GET_CMPCT_BLOCKS_RESPONSE, {} blocks".format(len(msg.blocks)))
+                    self._log_message(
+                        "receive",
+                        f"GET_CMPCT_BLOCKS_RESPONSE, {len(msg.blocks)} blocks",
+                    )
+
                 elif packet_type == GET_BLOCK_TXN_RESPONSE:
-                    self._log_message("receive", "GET_BLOCK_TXN_RESPONSE, block:{}".format(len(msg.block_hash)))
+                    self._log_message(
+                        "receive",
+                        f"GET_BLOCK_TXN_RESPONSE, block:{len(msg.block_hash)}",
+                    )
+
                 elif packet_type == GET_BLOCKS:
-                    self._log_message("receive", "GET_BLOCKS, {} hashes".format(len(msg.hashes)))
+                    self._log_message("receive", f"GET_BLOCKS, {len(msg.hashes)} hashes")
                     self.on_get_blocks(msg)
                 elif packet_type == GET_CMPCT_BLOCKS:
-                    self._log_message("receive", "GET_CMPCT_BLOCKS, {} hashes".format(len(msg.hashes)))
+                    self._log_message("receive", f"GET_CMPCT_BLOCKS, {len(msg.hashes)} hashes")
                     self.on_get_compact_blocks(msg)
                 elif packet_type == GET_BLOCK_TXN:
-                    self._log_message("receive", "GET_BLOCK_TXN, hash={}".format(len(msg.block_hash)))
+                    self._log_message("receive", f"GET_BLOCK_TXN, hash={len(msg.block_hash)}")
                     self.on_get_blocktxn(msg)
                 elif packet_type == GET_BLOCK_HASHES_BY_EPOCH:
-                    self._log_message("receive", "GET_BLOCK_HASHES_BY_EPOCH, epochs: {}".format(msg.epochs))
+                    self._log_message(
+                        "receive",
+                        f"GET_BLOCK_HASHES_BY_EPOCH, epochs: {msg.epochs}",
+                    )
+
                     self.on_get_block_hashes_by_epoch(msg)
                 else:
-                    self._log_message("receive", "Unknown packet {}".format(packet_type))
+                    self._log_message("receive", f"Unknown packet {packet_type}")
                     return
                 if packet_type in self.on_packet_func and msg is not None:
                     self.on_packet_func[packet_type](self, msg)
@@ -414,14 +444,9 @@ class P2PInterface(P2PConnection):
     def on_hello(self, payload):
         hello = rlp.decode(payload, Hello)
 
-        capabilities = []
-        for c in hello.capabilities:
-            capabilities.append((c.protocol, c.version))
-        self._log_message(
-            "receive", "Hello, capabilities:{}".format(capabilities))
-        ip = [127, 0, 0, 1]
-        if self.remote:
-            ip = get_ip_address()
+        capabilities = [(c.protocol, c.version) for c in hello.capabilities]
+        self._log_message("receive", f"Hello, capabilities:{capabilities}")
+        ip = get_ip_address() if self.remote else [127, 0, 0, 1]
         endpoint = NodeEndpoint(address=bytes(ip), tcp_port=32325, udp_port=32325)
         # FIXME: Use a valid pos_public_key.
         hello = Hello(DEFAULT_PY_TEST_CHAIN_ID, [Capability(self.protocol, self.protocol_version)], endpoint,
@@ -468,7 +493,7 @@ class P2PInterface(P2PConnection):
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to work around an issue with closing an asyncore socket when
 # using select)
-mininode_socket_map = dict()
+mininode_socket_map = {}
 
 # One lock for synchronizing all data access between the networking thread (see
 # NetworkThread below) and the thread running the test logic.  For simplicity,
@@ -492,10 +517,10 @@ class NetworkThread(threading.Thread):
             # We check for whether to disconnect outside of the asyncore
             # loop to work around the behavior of asyncore when using
             # select
-            disconnected = []
-            for fd, obj in mininode_socket_map.items():
-                if obj.disconnect:
-                    disconnected.append(obj)
+            disconnected = [
+                obj for fd, obj in mininode_socket_map.items() if obj.disconnect
+            ]
+
             [obj.handle_close() for obj in disconnected]
             asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
         logger.debug("Network thread closing")
@@ -503,7 +528,7 @@ class NetworkThread(threading.Thread):
 
 def network_thread_running():
     """Return whether the network thread is running."""
-    return any([thread.name == "NetworkThread" for thread in threading.enumerate()])
+    return any(thread.name == "NetworkThread" for thread in threading.enumerate())
 
 
 def network_thread_start():
@@ -525,7 +550,7 @@ def network_thread_join(timeout=10):
         assert not thread.is_alive()
 
 def start_p2p_connection(nodes: list, remote=False):
-    if len(nodes) == 0:
+    if not nodes:
         return
     p2p_connections = []
     # TODO(lpl): Figure out why pos slows down node starting.
@@ -538,7 +563,7 @@ def start_p2p_connection(nodes: list, remote=False):
         node.add_p2p_connection(conn)
 
     network_thread_start()
-    
+
     for p2p in p2p_connections:
         p2p.wait_for_status()
 
@@ -555,6 +580,9 @@ class Handshake:
         self.state = "ReadingAck"
 
     def read_ack(self, remote_node_id: bytes):
-        assert len(remote_node_id) == 64, "invalid node id length {}".format(len(remote_node_id))
+        assert (
+            len(remote_node_id) == 64
+        ), f"invalid node id length {len(remote_node_id)}"
+
         self.peer.peer_key = utils.encode_hex(remote_node_id)
         self.state = "StartSession"
